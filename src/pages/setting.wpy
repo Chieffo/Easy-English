@@ -124,7 +124,8 @@ export default class Setting extends wepy.page {
   onShareAppMessage() {
     return {
       title: '快来轻英语和我一起轻松学英语！',
-      path: './index'
+      path: './index',
+      imageUrl: '../assets/profile.png'
     };
   }
   setDayTask(e) {

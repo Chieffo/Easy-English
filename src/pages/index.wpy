@@ -193,7 +193,6 @@ export default class Index extends wepy.page {
   };
   onLoad() {
     this.time = this.set_time(new Date());
-    this.day_num = wx.getStorageSync('day_num');
     this.isLoadMore = true;
     this.loadList();
   }
@@ -209,6 +208,9 @@ export default class Index extends wepy.page {
     this.loadList();
   }
   onShow() {
+    this.day_num = wx.getStorageSync('day_num')
+      ? wx.getStorageSync('day_task')
+      : 0;
     this.todayNewWords = wx.getStorageSync('day_task')
       ? wx.getStorageSync('day_task')
       : 0;

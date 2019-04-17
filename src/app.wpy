@@ -376,12 +376,6 @@ export default class extends wepy.app {
       key: this.globalData.time,
       data: 0
     });
-    if (!wx.getStorageSync('day_num')) {
-      wx.setStorage({
-        key: 'day_num',
-        data: 0
-      });
-    }
     wx.setStorage({
       key: 'today_detail',
       data: {
