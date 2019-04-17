@@ -1,0 +1,22 @@
+<style lang="less">
+</style>
+
+<template lang="wxml">
+  <view class="choice">
+    <view class="word_name">{{ item }}<view class="underline"></view></view>
+    <view class="add" @tap="add" id="{{item}}"><image src="../../assets/add.png"></image>添加</view>
+  </view>
+</template>
+
+<script>
+import wepy from 'wepy';
+export default class AddWord extends wepy.component {
+  data = {};
+  methods = {
+    add(e) {
+      this.$emit('childAdd', e);
+    }
+  };
+  onLoad() {}
+}
+</script>

@@ -1,0 +1,250 @@
+<style lang="less">
+.input_search {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  height: 74rpx;
+  border-bottom: 1rpx solid #8f8f8f;
+  .search_left {
+    position: relative;
+  }
+  .icon_search {
+    position: absolute;
+    left: 0;
+    bottom: 24rpx;
+  }
+  .icon_cancel {
+    position: absolute;
+    right: 20rpx;
+    top: 12px;
+  }
+  input {
+    padding-left: 100rpx;
+    height: 64rpx;
+    font-size: 40rpx;
+  }
+  image {
+    width: 40rpx;
+    height: 40rpx;
+  }
+}
+.word_detail {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+  .detail_header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    .header_left {
+      width: 80%;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      color: rgba(16, 16, 16, 1);
+      font-size: 70rpx;
+      font-weight: bold;
+    }
+    .pron {
+      margin-left: 20rpx;
+      color: rgba(143, 143, 143, 1);
+      font-size: 40rpx;
+      font-weight: normal;
+    }
+    image {
+      width: 50rpx;
+      height: 50rpx;
+    }
+  }
+  .word_definition {
+    width: 100%;
+    padding-bottom: 10rpx;
+    border-bottom: 1rpx solid #8f8f8f;
+    font-size: 32rpx;
+  }
+}
+.example_sentence {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  .content {
+    padding-top: 60rpx;
+    text-align: left;
+    font-size: 28rpx;
+  }
+  .content_en {
+    margin-bottom: 10rpx;
+  }
+}
+.btn_add_word {
+  position: fixed;
+  bottom: 0;
+  margin-bottom: 30rpx;
+  width: 300rpx;
+  height: 80rpx;
+  color: rgb(255, 255, 255);
+  background-color: rgb(121, 200, 158);
+  border-radius: 8rpx;
+  font-size: 32rpx;
+  border-width: 2rpx;
+  border-style: solid;
+  text-align: center;
+}
+</style>
+
+<template lang="wxml">
+  <view class="container">
+    <view class="input_search">
+      <view class="search_left">
+        <image class="icon_search" src="../assets/search.png"></image>
+        <input type="text"
+          placeholder="输入单词搜索"
+          bindinput="inputTyping"
+          bindconfirm="search"
+          value="{{ inputContent }}"
+          focus="{{ isFocus }}">
+      </view>
+      <image class="icon_cancel" src="../assets/enter.png" wx:if="{{ !isSearch }}" @tap="search"></image>
+      <image class="icon_cancel" src="../assets/cancel.png" wx:if="{{ isSearch }}" @tap="clear"></image>
+    </view>
+    <view class="word_detail" wx:if="{{ isSearch }}">
+      <view @tap="read" id="{{ pron_audio.us[0] }}" class="detail_header">
+        <view class="header_left">
+          <view>{{ content }}</view>
+          <view class="pron">/{{ pron.us }}/</view>
+        </view>
+        <image src="../../assets/sound.png"></image>
+      </view>
+      <view class="word_definition">
+        <view wx:for="{{ definition }}" wx:key="{{ index }}">{{ item }}</view>
+      </view>
+    </view>
+    <view class="example_sentence" wx:if="{{ isSearch }}">
+      <view class="content" wx:for="{{ defen }}" wx:key="{{ index }}">
+        <view class="content_en">{{ item.first }}
+          <view style="color:red;display:inline;"> {{ item.mid }} </view>{{ item.last }}</view>
+        <view class="content_ch">{{ item.translation }}</view>
+      </view>
+    </view>
+    <button class="btn_add_word" @tap="addWord" wx:if="{{ isSearch }}">添加</button>
+  </view>
+</template>
+
+<script>
+import wepy from 'wepy';
+export default class Search extends wepy.page {
+  config = {};
+  data = {
+    content: '',
+    pron: '',
+    pron_audio: '',
+    definition: '',
+    defen: [],
+    isSearch: false,
+    inputContent: '',
+    isFocus: true
+  };
+  methods = {
+    // 得到输入的内容
+    inputTyping(e) {
+      this.inputContent = e.detail.value.trim();
+    },
+    // 通过扇贝提供的api搜索该函数
+    search() {
+      this.isFocus = false;
+      if (!this.inputContent) {
+        var that = this;
+        wx.showModal({
+          title: '提示',
+          content: '请先输入内容',
+          complete: function() {
+            that.isFocus = true;
+          }
+        });
+        return;
+      }
+      this.isSearch = true;
+      this.content = this.inputContent;
+      var that = this;
+      wx.request({
+        url: 'https://api.shanbay.com/bdc/search/?word=' + this.inputContent,
+        data: {},
+        method: 'GET',
+        success: function(res) {
+          that.pron = res.data.data.pronunciations;
+          that.pron_audio = res.data.data.audio_addresses;
+          that.definition = res.data.data.definition.split('\n');
+          var id = res.data.data.conent_id;
+          that.liju(id);
+          that.$apply();
+        },
+        fail: function() {},
+        complete: function() {}
+      });
+    },
+    // 清除输入框内容
+    clear() {
+      this.isFocus = true;
+      this.inputContent = '';
+      this.isSearch = false;
+    },
+    // 单词发音触发函数
+    read(e) {
+      const innerAudioContext = wx.createInnerAudioContext();
+      innerAudioContext.autoplay = true;
+      innerAudioContext.src = e.currentTarget.id;
+      innerAudioContext.onPlay(() => {});
+      innerAudioContext.onError(res => {
+        console.log(res.errMsg);
+        console.log(res.errCode);
+      });
+    },
+    // 添加到规划单词函数
+    addWord() {
+      var addWord = this.content;
+      var wordList = wx.getStorageSync('word_list');
+      // 把单词添加到我的规划单词中
+      var word = {
+        word: addWord,
+        ease: 0.5,
+        day: 0
+      };
+      wordList.push(word);
+      wx.setStorageSync('word_list', wordList);
+      wx.showToast({
+        title: '添加成功',
+        icon: 'succes',
+        duration: 1000,
+        mask: true
+      });
+    }
+  };
+  onLoad() {}
+  onShow() {
+    this.isFocus = true;
+  }
+  onHide() {
+    this.isFocus = false;
+  }
+  // 触发例句函数
+  liju(id) {
+    var that = this;
+    wx.request({
+      url: 'https://api.shanbay.com/bdc/example/?vocabulary_id=' + id,
+      data: {},
+      method: 'GET',
+      success: function(res) {
+        var result = res.data.data;
+        for (let i = 0; i < result.length; i++) {
+          if (i >= 3) break;
+          that.defen[i] = result[i];
+        }
+        that.$apply();
+      },
+      fail: function() {},
+      complete: function() {}
+    });
+  }
+}
+</script>

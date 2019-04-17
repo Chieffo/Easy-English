@@ -1,0 +1,23 @@
+<style lang="less">
+</style>
+
+<template lang="wxml">
+  <view class="word_detail">
+    <view class="name_underline">{{ item.word }}
+      <view class="underline"></view>
+    </view>
+    <view class="other">
+      <view class="big_font" style="margin-right: 60rpx">权重{{ item.ease }}</view>
+      <view class="middle_font">{{ item.day }}天前</view>
+    </view>
+  </view>
+</template>
+
+<script>
+import wepy from 'wepy';
+export default class MyWord extends wepy.component {
+  data = {};
+  methods = {};
+  onLoad() {}
+}
+</script>

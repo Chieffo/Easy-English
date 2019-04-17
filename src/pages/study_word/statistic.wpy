@@ -1,0 +1,225 @@
+<style lang="less">
+.header {
+  display: flex;
+  position: relative;
+  justify-content: center;
+  margin-bottom: 30rpx;
+}
+.canvas {
+  width: 100%;
+  height: 600rpx;
+  align-content: left;
+  align-items: left;
+  text-align: left;
+}
+.statistic {
+  display: flex;
+  flex-direction: column;
+  font-size: 32rpx;
+  > view {
+    margin-top: 30rpx;
+    padding-left: 30rpx;
+  }
+  .remember {
+    border-left: 10rpx solid cornflowerblue;
+    color: cornflowerblue;
+  }
+  .blur {
+    border-left: 10rpx solid orange;
+    color: orange;
+  }
+  .forget {
+    border-left: 10rpx solid gray;
+    color: gray;
+  }
+  .tips {
+    border-left: 10rpx solid black;
+  }
+}
+</style>
+
+<template lang="wxml">
+  <view class="container">
+    <view class="header">我的进度
+      <view class="underline"></view>
+    </view>
+    <canvas class="canvas" canvas-id="lineCanvas" disable-scroll="true" bindtouchstart="touchHandler" bindtouchmove="moveHandler" bindtouchend="touchEndHandler"></canvas>
+    <view class="statistic">
+      <view class='remember'>熟悉的单词 | 今日:{{todayRemember}} | 总计:{{remember}} | 每个单词权重为0~1之间</view>
+      <view class='blur'>模糊的单词 | 今日:{{todayBlur}} | 总计:{{blur}} | 权重0.4~0.7的单词为模糊</view>
+      <view class='forget'>忘记的单词 | 今日:{{todayForget}} | 总计:{{forget}} | 权重小于0.4的为忘记</view>
+      <view class='tips'>新词权重为0.5。忘记或模糊会减少权重，提前安排复习</view>
+    </view>
+  </view>
+</template>
+
+<script>
+import wepy from 'wepy';
+var wxCharts = require('../../utils/wxcharts.js');
+var lineChart = null;
+export default class Statistic extends wepy.page {
+  config = {
+    navigationBarTitleText: '我的进度'
+  };
+  data = {
+    todayRemember: 0,
+    remember: 0,
+    todayBlur: 0,
+    blur: 0,
+    todayForget: 0,
+    forget: 0
+  };
+  methods = {};
+  onLoad() {
+    var windowWidth = 320;
+    try {
+      var res = wx.getSystemInfoSync();
+      windowWidth = res.windowWidth;
+    } catch (e) {
+      console.error('getSystemInfoSync failed!');
+    }
+    var simulationData = this.createSimulationData();
+    lineChart = new wxCharts({
+      canvasId: 'lineCanvas',
+      type: 'line',
+      categories: simulationData.categories,
+      animation: false,
+      series: [
+        {
+          name: '记住',
+          data: simulationData.remember,
+          format: (val, name) => {
+            return val.toFixed(2);
+          }
+        },
+        {
+          name: '模糊',
+          data: simulationData.blur,
+          format: (val, name) => {
+            return val.toFixed(2);
+          }
+        },
+        {
+          name: '忘记',
+          data: simulationData.forget,
+          format: (val, name) => {
+            return val.toFixed(2);
+          }
+        }
+      ],
+      xAxis: {
+        disableGrid: false
+      },
+      yAxis: {
+        format: function(val) {
+          return val.toFixed(2);
+        },
+        min: 0
+      },
+      width: windowWidth,
+      height: 260,
+      dataLabel: true,
+      dataPointShape: true,
+      enableScroll: true,
+      extra: {
+        lineStyle: 'curve'
+      }
+    });
+    var wordList = wx.getStorageSync('word_list');
+    var len = wordList.length;
+    var r = 0,
+      b = 0,
+      f = 0;
+    for (let i = 0; i < len; i++) {
+      if (wordList[i].ease > 0.7) r++;
+      else {
+        if (wordList[i].ease > 0.4) b++;
+        else f++;
+      }
+    }
+    var todayDetail = wx.getStorageSync('today_detail');
+    this.remember = r;
+    this.blur = b;
+    this.forget = f;
+    this.todayRemember = todayDetail.remember;
+    this.todayBlur = todayDetail.blur;
+    this.todayForget = todayDetail.forget;
+  }
+  /**
+   * 生命周期函数--监听页面初次渲染完成
+   */
+  onReady() {
+    this.onLoad();
+  }
+  /**
+   * 生命周期函数--监听页面显示
+   */
+  onShow() {
+    this.onLoad();
+  }
+  touchHandler(e) {
+    lineChart.scrollStart(e);
+  }
+  moveHandler(e) {
+    lineChart.scroll(e);
+  }
+  touchEndHandler(e) {
+    lineChart.scrollEnd(e);
+    lineChart.showToolTip(e, {
+      format: (item, category) => {
+        return category + ' ' + item.name + ':' + item.data;
+      }
+    });
+  }
+  createSimulationData() {
+    var categories = [];
+    var remember = [];
+    var blur = [];
+    var forget = [];
+    var all_detail = wx.getStorageSync('all_detail');
+    var length = all_detail.length;
+    if (length === 0) {
+      for (var i = 0; i < 15; i++) {
+        categories.push('null');
+        remember.push(50 + Math.random() * (25 - 10) + 10);
+        blur.push(30 + Math.random() * (25 - 10) + 10);
+        forget.push(20 + Math.random() * (25 - 10) + 10);
+      }
+    } else if (length < 15) {
+      for (var i = 0; i < 15; i++) {
+        if (i < length) {
+          categories.push(all_detail[i].day);
+          remember.push(all_detail[i].remember);
+          blur.push(all_detail[i].blur);
+          forget.push(all_detail[i].forget);
+        } else {
+          categories.push('未来');
+          remember.push(
+            all_detail[length - 1].remember + Math.random() * (15 - 10) + 2
+          );
+          blur.push(
+            all_detail[length - 1].blur + Math.random() * (15 - 10) + 2
+          );
+          forget.push(
+            all_detail[length - 1].forget - Math.random() * (15 - 10) + 2
+          );
+        }
+      }
+    } else {
+      var startPosition = length - 15;
+      for (var i = startPosition; i < length; i++) {
+        categories.push(all_detail[i].day);
+        remember.push(all_detail[i].remember);
+        blur.push(all_detail[i].blur);
+        forget.push(all_detail[i].forget);
+      }
+    }
+    return {
+      categories: categories,
+      remember: remember,
+      blur: blur,
+      forget: forget
+    };
+  }
+}
+</script>

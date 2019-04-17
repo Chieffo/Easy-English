@@ -1,0 +1,653 @@
+<style lang="less">
+.choice {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  flex-direction: column;
+  align-items: center;
+  .btn_choice {
+    margin-bottom: 30rpx;
+    width: 700rpx;
+    height: 90rpx;
+    color: rgb(255, 255, 255);
+    background-color: rgb(121, 200, 158);
+    border-radius: 4rpx;
+    font-size: 36rpx;
+    text-align: center;
+    font-weight: normal;
+    border: rgba(121, 200, 158, 1);
+  }
+  .btn_choice::after {
+    border: none;
+  }
+  .btn_choice:active {
+    background-color: rgb(71, 150, 108);
+  }
+}
+.cpt {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  .pieChart_cpt {
+    height: 600rpx;
+  }
+  .btn_return {
+    position: fixed;
+    bottom: 0;
+    width: 60%;
+    border-radius: 5px;
+    margin: 20px auto;
+    padding-top: 2px;
+    font-size: 14px;
+    background-color: rgb(121, 200, 158);
+    color: white;
+    overflow: hidden;
+    height: 40px;
+  }
+}
+.word_detail {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+  .detail_header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    .header_left {
+      width: 80%;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      color: rgba(16, 16, 16, 1);
+      font-size: 70rpx;
+      font-weight: bold;
+    }
+    .pron {
+      margin-left: 20rpx;
+      color: rgba(143, 143, 143, 1);
+      font-size: 40rpx;
+      font-weight: normal;
+    }
+    image {
+      width: 50rpx;
+      height: 50rpx;
+    }
+  }
+  .word_definition {
+    width: 100%;
+    padding-bottom: 10rpx;
+    border-bottom: 1rpx solid #8f8f8f;
+    font-size: 32rpx;
+  }
+}
+.show {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 800rpx;
+  color: red;
+}
+.example_sentence {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 800rpx;
+  .content {
+    padding-top: 60rpx;
+    text-align: left;
+    font-size: 28rpx;
+  }
+  .content_en {
+    margin-bottom: 10rpx;
+  }
+}
+.btn_affirm {
+  position: fixed;
+  bottom: 30rpx;
+  button {
+    margin-top: 30rpx;
+    width: 700rpx;
+    height: 90rpx;
+    border-radius: 8rpx;
+    color: rgba(16, 16, 16, 1);
+    font-size: 36rpx;
+    background-color: #fff;
+    border: 0.2rpx solid rgba(187, 187, 187, 1);
+  }
+  button::after {
+    border: none;
+  }
+  button:active {
+    background-color: rgba(121, 200, 158, 0.5);
+    border: rgba(121, 200, 158, 1);
+  }
+  .remember {
+    width: 240rpx;
+    height: 80rpx;
+    border-radius: 130rpx;
+    font-size: 30rpx;
+    image {
+      margin-right: 5rpx;
+      width: 60rpx;
+      height: 60rpx;
+    }
+  }
+}
+.btn_next {
+  position: fixed;
+  bottom: 30rpx;
+  button {
+    width: 700rpx;
+    height: 90rpx;
+    border-radius: 8rpx;
+    color: rgb(255, 255, 255);
+    font-size: 36rpx;
+    background-color: rgb(121, 200, 158);
+    border: 0.2rpx solid rgba(121, 200, 158);
+  }
+  button::after {
+    border: none;
+  }
+}
+</style>
+
+<template lang="wxml">
+  <view class="choice" wx:if="{{ goto_choice && !(cpt) }}">
+    <view style="margin-top: 30rpx;">你今天还需要选择 {{ today_new_num }} 个新单词！
+      <view>每天的新词数根据平常学习情况而定</view>
+    </view>
+    <button class="btn_choice" @tap="choiceWords">去选择</button>
+  </view>
+  <view class="cpt" wx:if="{{ cpt }}">
+    <canvas class='pieChart_cpt' canvas-id="pieCanvas"></canvas>
+    <view>太棒啦,今天的任务都完成了!</view>
+    <button class="btn_return" @tap="back">返回</button>
+  </view>
+  <view class="container" wx:if="{{ !(goto_choice) && !(cpt) }}">
+    <view class="word_detail">
+      <view @tap="read" id="{{ pron_audio.us[0] }}" class="detail_header">
+        <view class="header_left">
+          <view>{{ content }}</view>
+          <view class="pron">/{{ pron.us }}/</view>
+        </view>
+        <image src="../../assets/sound.png"></image>
+      </view>
+      <view wx:if="{{ !(isShow) && !(cpt)}}">{{ hint }}</view>
+      <view class="word_definition" wx:if="{{ isShow }}">
+        <view wx:for="{{ definition }}" wx:key="{{ index }}">{{ item }}</view>
+      </view>
+    </view>
+    <view class="show" wx:if="{{ !(isShow) }}" @tap="show">
+      点击查看释义和例句
+    </view>
+    <view class="example_sentence" wx:if="{{ isShow }}">
+      <view class="content" wx:for="{{ defen }}" wx:key="{{ index }}">
+        <view class="content_en">{{ item.first }}
+          <view style="color:red;display:inline;"> {{ item.mid }} </view>{{ item.last }}</view>
+        <view class="content_ch">{{ item.translation }}</view>
+      </view>
+    </view>
+    <view class="btn_affirm" wx:if="{{ !studyState }}">
+      <button class="remember" @tap="clickStudy('remember')"><image src="../../assets/remember.png"></image>记住了</button>
+      <button class="blur" @tap="clickStudy('blur')">模糊</button>
+      <button class="forget" @tap="clickStudy('forget')">忘记了</button>
+    </view>
+    <view class="btn_next" wx:if="{{ studyState }}">
+      <button @tap="next">下一个</button>
+    </view>
+  </view>
+</template>
+
+<script>
+import wepy from 'wepy';
+var wxCharts = require('../../utils/wxcharts.js');
+var pieChart = null;
+export default class Word extends wepy.page {
+  config = {
+    navigationBarTitleText: '背单词'
+  };
+  data = {
+    goto_choice: false,
+    content: '', // 单词
+    pron: {}, // 单词发音
+    pron_audio: {}, // 单词音频
+    definition: [], // 单词释义
+    defen: [], // 单词例句
+    studyState: '', // 点击学习按钮后的状态
+    isShow: false,
+    today_new_num: 0,
+    cpt: false,
+    task_num: '', // 每天任务量
+    today_word: [], // 今日要学习的单词列表
+    hint: '', // 单词提示
+    task_detail: {}
+  };
+  methods = {
+    // 单词发音触发函数
+    read(e) {
+      const innerAudioContext = wx.createInnerAudioContext();
+      innerAudioContext.autoplay = true;
+      innerAudioContext.src = e.currentTarget.id || '';
+      innerAudioContext.onPlay(() => {});
+      innerAudioContext.onError(res => {
+        console.log(res.errMsg);
+        console.log(res.errCode);
+      });
+    },
+    // 单词被展示时
+    show() {
+      const innerAudioContext = wx.createInnerAudioContext();
+      innerAudioContext.autoplay = true;
+      var audio = this.pron_audio ? this.pron_audio : '';
+      innerAudioContext.src = audio ? audio.us[0] : '';
+      innerAudioContext.onPlay(() => {});
+      innerAudioContext.onError(res => {
+        console.log(res.errMsg);
+        console.log(res.errCode);
+      });
+      this.isShow = true;
+    },
+    // 点击学习按钮函数
+    clickStudy(state) {
+      this.studyState = state;
+      this.isShow = true;
+    },
+    // 点击一个单词按钮函数
+    next() {
+      switch (this.studyState) {
+        // 用户点击认识
+        case 'remember':
+          var temp = this.counter;
+          // 判断当前单词是否最后一个单词，并准备加载下一个单词
+          var today_task = wx.getStorageSync('task');
+          today_task.shift();
+          var length = today_task.length;
+          if (length > 0) {
+            var n = today_task[0];
+            this.isShow = false;
+            this.counter = n;
+            wx.setStorage({
+              key: 'task',
+              data: today_task
+            });
+            this.search(this.today_word[n].word);
+          } else {
+            wx.setStorage({
+              key: 'task',
+              data: today_task
+            });
+            this.complete();
+          }
+          // 判断当前单词是否第一次展示
+          if (
+            this.task_detail[temp].remember === 0 &&
+            this.task_detail[temp].blur === 0 &&
+            this.task_detail[temp].forget === 0
+          ) {
+            var td = wx.getStorageSync('today_detail');
+            td.remember = td.remember + 1;
+            wx.setStorage({
+              key: 'today_detail',
+              data: td
+            });
+          }
+          this.task_detail[temp].remember++;
+          // 判断当前单词是否最后一次被显示
+          if (
+            this.task_detail[temp].remember >=
+            this.task_detail[temp].forget * 3 + this.task_detail[temp].blur * 2
+          ) {
+            wx.setStorage({
+              key: this.$parent.globalData.time,
+              data: wx.getStorageSync(this.$parent.globalData.time) + 1
+            });
+          }
+          break;
+        // 用户点击忘记时调用该函数
+        case 'blur':
+          var temp = this.counter;
+          var today_task = wx.getStorageSync('task');
+          today_task.shift();
+          var length = today_task.length;
+          // 在单词队列中添加三个该单词
+          today_task.splice(length / 2, 0, temp);
+          today_task.splice(6, 0, temp);
+          today_task.splice(2, 0, temp);
+          wx.setStorage({
+            key: 'task',
+            data: today_task
+          });
+          var n = today_task[0];
+          this.isShow = false;
+          this.counter = n;
+          wx.setStorage({
+            key: 'task',
+            data: today_task
+          });
+          this.search(this.today_word[n].word);
+          if (
+            this.task_detail[temp].remember === 0 &&
+            this.task_detail[temp].blur === 0 &&
+            this.task_detail[temp].forget === 0
+          ) {
+            var td = wx.getStorageSync('today_detail');
+            td.forget = td.forget + 1;
+            wx.setStorage({
+              key: 'today_detail',
+              data: td
+            });
+          }
+          this.task_detail[temp].forget++;
+          break;
+        // 用户点击模糊时调用函数
+        case 'forget':
+          var temp = this.counter;
+          var today_task = wx.getStorageSync('task');
+          today_task.shift();
+          // 在单词队列中添加两个该单词
+          var length = today_task.length;
+          today_task.splice(length / 3, 0, this.counter);
+          today_task.splice(5, 0, this.counter);
+          wx.setStorage({
+            key: 'task',
+            data: today_task
+          });
+          var n = today_task[0];
+          this.isShow = false;
+          this.counter = n;
+          wx.setStorage({
+            key: 'task',
+            data: today_task
+          });
+          this.search(this.today_word[n].word);
+          if (
+            this.task_detail[temp].remember === 0 &&
+            this.task_detail[temp].blur === 0 &&
+            this.task_detail[temp].forget === 0
+          ) {
+            var td = wx.getStorageSync('today_detail');
+            td.blur = td.blur + 1;
+            wx.setStorage({
+              key: 'today_detail',
+              data: td
+            });
+          }
+          this.task_detail[this.counter].blur++;
+          break;
+      }
+      this.studyState = '';
+    },
+    // 添加规划单词
+    choiceWords() {
+      this.$navigate({
+        url: './choice_word'
+      });
+    },
+    // 返回首页
+    back() {
+      wx.navigateBack({
+        delta: 10
+      });
+    }
+  };
+  onLoad() {
+    this.task_num = wx.getStorageSync('day_task');
+    if (
+      !wx.getStorageSync('today_detail') ||
+      wx.getStorageSync('today_detail') === undefined
+    ) {
+      wx.setStorage({
+        key: 'today_detail',
+        data: {
+          day: this.$parent.globalData.time,
+          remember: 0,
+          blur: 0,
+          forget: 0
+        }
+      });
+    }
+    // 数据初始化
+    this.book = wx.getStorageSync('book');
+    this.today_word = wx.getStorageSync('today_word');
+    this.task_detail = wx.getStorageSync('task_detail');
+    this.today_new_num = wx.getStorageSync('today_new_num');
+    // 如果单词列表的词不够，要求用户先去选词
+    if (this.today_word.length < this.task_num) {
+      this.goto_choice = true;
+    } else {
+      var today_task = wx.getStorageSync('task');
+      if (today_task.length > 0) {
+        var task_num = today_task[0];
+        this.isShow = false;
+        this.counter = task_num;
+        this.search(this.today_word[task_num].word);
+      } else {
+        if (!wx.getStorageSync('first_login')) this.complete(); // 登陆时判断是否今天已完成
+      }
+    }
+    // 可能会有task_detail数据丢失的情况，重新初始化
+    if (!wx.getStorageSync('task_detail')) {
+      var task = [];
+      var task_detail = [];
+      var day = wx.getStorageSync('day_task');
+      for (var i = 0; i < day; i++) {
+        task_num[i] = i;
+        task_detail[i] = {
+          remember: 0,
+          blur: 0,
+          forget: 0
+        };
+      }
+      wx.setStorage({
+        key: 'task',
+        data: task
+      });
+      wx.setStorage({
+        key: 'task_detail',
+        data: task_detail
+      });
+    }
+  }
+  // 当页面重新展示时调用函数
+  onShow() {
+    this.today_word = wx.getStorageSync('today_word');
+    this.task_detail = wx.getStorageSync('task_detail');
+    if (this.today_word.length < this.task_num) {
+      this.goto_choice = true;
+    } else {
+      this.goto_choice = false;
+      // 加载第一个单词
+      var today_task = wx.getStorageSync('task');
+      var length = today_task.length;
+      if (length > 0) {
+        var n = today_task[0];
+        this.isShow = false;
+        this.counter = n;
+        this.search(this.today_word[n].word);
+      } else {
+        this.complete();
+      }
+    }
+  }
+  // 当页面被隐藏时，保存数据
+  onHide() {
+    wx.setStorageSync('task_detail', this.task_detail);
+  }
+  // 当页面被卸载时，保存数据
+  onUnload() {
+    wx.setStorageSync('task_detail', this.task_detail);
+  }
+  // 页面分享函数
+  onShareAppMessage(options) {}
+  // 触发本地单词队列重新排序
+  // 在当天第一次完成单词任务后触发
+  sort_wordlist() {
+    var last_list = wx.getStorageSync('word_list');
+    var today_detail = this.task_detail;
+    // 重新设置当天背的单词的权值
+    var len = today_detail.length;
+    for (var i = 0; i < len; i++) {
+      last_list[i].day = 0;
+      if (today_detail[i].remember >= 1) {
+        last_list[i].ease = last_list[i].ease + 0.05;
+      } else {
+        if (today_detail[i].blur < today_detail[i].forget) {
+          last_list[i].ease = last_list[i].ease - 0.1;
+        } else last_list[i].ease = last_list[i].ease - 0.05;
+      }
+    }
+    // 把单词列表中权值大于1的单词删除并添加到已背单词
+    for (var i = 0; i < last_list.length; i++) {
+      if (last_list[i].ease > 1) {
+        var rememberWords = wx.getStorageSync('remember_words');
+        rememberWords.push(last_list[i]);
+        wx.setStorage({
+          key: 'remember_words',
+          data: rememberWords
+        });
+        last_list.splice(i, 1);
+      }
+    }
+    // 重新单词排序,权值小的优先，即难记的先记
+    var len2 = last_list.length;
+    for (var i = len; i < len2; i++) {
+      last_list[i].day++;
+    }
+    for (var i = 0; i < len2; i++) {
+      for (var j = i + 1; j < len2; j++) {
+        if (last_list[j].ease < last_list[i].ease) {
+          var temp = last_list[j];
+          last_list[j] = last_list[i];
+          last_list[i] = temp;
+        }
+      }
+    }
+    wx.setStorageSync('word_list', last_list);
+  }
+  // 通过扇贝提供的api搜索该单词
+  search(word) {
+    this.content = word;
+    var that = this;
+    wx.request({
+      url: 'https://api.shanbay.com/bdc/search/?word=' + word,
+      data: {},
+      method: 'GET',
+      success: function(res) {
+        that.pron = res.data.data.pronunciations;
+        that.pron_audio = res.data.data.audio_addresses;
+        var definition = res.data.data.definition
+          ? res.data.data.definition
+          : '';
+        that.definition =
+          definition.indexOf('\n') >= 0 ? definition.split('\n') : [definition];
+        var id = res.data.data.conent_id;
+        that.liju(id);
+        that.$apply();
+      },
+      fail: function() {},
+      complete: function() {}
+    });
+    wx.setStorage({
+      key: 'first_login',
+      data: false
+    });
+  }
+  // 触发例句函数
+  liju(id) {
+    var that = this;
+    wx.request({
+      url: 'https://api.shanbay.com/bdc/example/?vocabulary_id=' + id,
+      data: {},
+      method: 'GET',
+      success: function(res) {
+        var result = res.data.data;
+        for (let i = 0; i < result.length; i++) {
+          if (i >= 3) break;
+          that.defen[i] = result[i];
+        }
+        var hint = res.data.data[0] ? res.data.data[0] : '';
+        that.hint = hint ? hint.translation : '';
+        that.$apply();
+      },
+      fail: function() {},
+      complete: function() {}
+    });
+  }
+  // 完成当天学习任务后触发的函数
+  complete() {
+    if (!wx.getStorageSync('first_login')) {
+      (this.cpt = true), (this.isShow = false);
+    }
+    //绘制当天学习细节扇行图
+    var chart_detail = wx.getStorageSync('today_detail');
+    var windowWidth = 320;
+    try {
+      var res = wx.getSystemInfoSync();
+      windowWidth = res.windowWidth;
+    } catch (e) {
+      console.error('getSystemInfoSync failed!');
+    }
+    pieChart = new wxCharts({
+      animation: true,
+      canvasId: 'pieCanvas',
+      type: 'pie',
+      series: [
+        {
+          name: '记住了',
+          data: chart_detail.remember
+        },
+        {
+          name: '模糊',
+          data: chart_detail.blur
+        },
+        {
+          name: '忘记了',
+          data: chart_detail.forget
+        }
+      ],
+      width: windowWidth,
+      height: 220,
+      dataLabel: true
+    });
+    // 第一次触发完成函数时
+    // 保存当天的学习情况
+    if (
+      !wx.getStorageSync('complete') ||
+      wx.getStorageSync('complete') === false
+    ) {
+      var n = 0 + wx.getStorageSync('day_num');
+      wx.setStorage({
+        key: 'day_num',
+        data: n + 1
+      });
+      wx.setStorage({
+        key: 'complete',
+        data: true
+      });
+      this.sort_wordlist();
+      var all_detail = [];
+      if (!wx.getStorageSync('all_detail')) {
+        all_detail.push(wx.getStorageSync('today_detail'));
+        wx.setStorage({
+          key: 'all_detail',
+          data: all_detail
+        });
+      } else {
+        all_detail = wx.getStorageSync('all_detail');
+        all_detail.push(wx.getStorageSync('today_detail'));
+        wx.setStorage({
+          key: 'all_detail',
+          data: all_detail
+        });
+      }
+    }
+  }
+}
+</script>

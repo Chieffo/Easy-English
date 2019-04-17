@@ -1,0 +1,330 @@
+<style lang="less">
+.header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  margin-bottom: 50rpx;
+  font-size: 40rpx;
+}
+.book {
+  display: flex;
+  flex-wrap: wrap;
+  .item {
+    display: flex;
+    flex-direction: column;
+    width: 28%;
+    margin: 0 0 40rpx 30rpx;
+    > image {
+      width: 200rpx;
+      height: 300rpx;
+      border-radius: 12rpx;
+      border: solid 0rpx #fff;
+    }
+    .book_name {
+      margin-top: 20rpx;
+      font-size: 30rpx;
+    }
+    .word_num {
+      margin-top: 10rpx;
+      font-size: 20rpx;
+    }
+  }
+}
+.word_list {
+  width: 100%;
+  image {
+    width: 50rpx;
+    height: 50rpx;
+    margin-right: 10rpx;
+  }
+  .choice {
+    height: 100rpx;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 60rpx;
+    border-bottom: 0.2rpx solid rgba(187, 187, 187, 1);
+    .word_name {
+      position: relative;
+    }
+    .add {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+  }
+}
+</style>
+
+<template lang="wxml">
+  <view class="container">
+    <view class="header">{{wordBookName}}<view class="underline"></view></view>
+    <view class="book" wx:if="{{ !isChoice }}">
+      <view class="item" wx:for="{{ wordBooksIndex }}" wx:key="{{ index }}" id="{{ item.index }}" @tap="choice_book">
+        <image src="../../assets/{{ item.id }}.png"></image>
+        <view class="book_name">{{ item.name }}</view>
+        <view class="word_num">{{ item.wordNum }}</view>
+      </view>
+    </view>
+    <view class="word_list" wx:if="{{ isChoice }}">
+      <view class="choice">
+        <view class="add" @tap="choice_book" id="back"><image src="../../assets/return.png"></image>返回</view>
+        <view class="add" @tap="choice_word" id="all_word"><image src="../../assets/select_all.png"></image>添加整本</view>
+      </view>
+      <view wx:if="{{ isEmpty }}">已全部加入规划单词中</view>
+      <repeat wx:if="{{ !isEmpty }}" for="{{ bookWordList }}" key="index" index="index" item="item">
+        <addWord :item="item" @childAdd.user='choice_word'></addWord>
+      </repeat>
+      <view class="choice" wx:if="{{ isLoadAll }}">没有更多了~</view>
+    </view>
+  </view>
+</template>
+
+<script>
+import wepy from 'wepy';
+import AddWord from '../../components/add-word';
+export default class ChoiceWord extends wepy.page {
+  components = {
+    addWord: AddWord
+  };
+  config = {
+    navigationBarTitleText: '挑选单词'
+  };
+  data = {
+    wordBookName: '单词书',
+    wordBooksIndex: [],
+    isChoice: false,
+    bookWordList: [],
+    isEmpty: false,
+    isLoadAll: false,
+    startPosition: 0,
+    endPosition: 20
+  };
+  methods = {
+    choice_book(e) {
+      var bookIndex = e.currentTarget.id;
+      if (bookIndex !== 'back') {
+        var allBookIndex = wx.getStorageSync('word_books_index');
+        var index_Position = allBookIndex.findIndex(obj => {
+          return obj.index === bookIndex;
+        });
+        this.wordBookName = allBookIndex[index_Position].name; // 通过Index查找设置单词书名字
+        wx.setStorage({
+          key: 'book_index',
+          data: bookIndex
+        });
+        this.loadWordList();
+        this.isChoice = true;
+        if (this.bookWordList.length <= 0) {
+          this.isEmpty = true;
+        } else {
+          this.isEmpty = false;
+        }
+      } else {
+        this.wordBookName = '单词书';
+        this.bookWordList = [];
+        this.startPosition = 0;
+        this.endPosition = 20;
+        this.isChoice = false;
+        this.isLoadAll = false;
+        this.sort_wordList();
+        this.$apply();
+      }
+    },
+    choice_word(e, evt) {
+      var addWord = e.currentTarget.id;
+      var wordList = wx.getStorageSync('word_list');
+      if (addWord !== 'all_word') {
+        // 把单词添加到我的规划单词中
+        var word = {
+          word: addWord,
+          ease: 0.5,
+          day: 0
+        };
+        wordList.push(word);
+        wx.setStorageSync('word_list', wordList);
+        // 删除单词书中已添加的单词
+        var position = this.bookWordList.indexOf(addWord);
+        this.bookWordList.splice(position, 1);
+        // 更新本地储存
+        var bookIndex = wx.getStorageSync('book_index');
+        wx.setStorageSync(bookIndex, this.bookWordList);
+      } else {
+        wx.showToast({
+          title: '正在添加',
+          icon: 'loading',
+          duration: 100000
+        });
+        // 添加所有单词到规划单词
+        var bookIndex = wx.getStorageSync('book_index');
+        var storeWordList = wx.getStorageSync(bookIndex);
+        var len = storeWordList.length;
+        for (let i = 0; i < len; i++) {
+          var word = {
+            word: storeWordList[i],
+            ease: 0.5,
+            day: 0
+          };
+          wordList.push(word);
+          wx.setStorageSync('word_list', wordList);
+        }
+        wx.hideToast();
+        this.isEmpty = true;
+        this.bookWordList = [];
+        wx.setStorageSync(bookIndex, this.bookWordList);
+      }
+    }
+  };
+  onLoad() {
+    // 初始化所有单词书的索引与单词书的详细信息
+    if (!wx.getStorageSync('word_books_index')) {
+      wx.setStorage({
+        key: 'word_books_index',
+        data: [
+          {
+            id: 'word_book_1',
+            name: '考研词汇',
+            wordNum: '3837词',
+            index: 'kaoyan'
+          },
+          {
+            id: 'word_book_2',
+            name: '四级词汇',
+            wordNum: '2895词',
+            index: 'cet4'
+          },
+          {
+            id: 'word_book_3',
+            name: '六级词汇',
+            wordNum: '2085词',
+            index: 'cet6'
+          },
+          {
+            id: 'word_book_4',
+            name: '考研核心词汇',
+            wordNum: '817词',
+            index: 'kaoyan_core'
+          },
+          {
+            id: 'word_book_5',
+            name: '四级核心词汇',
+            wordNum: '687词',
+            index: 'cet4_core'
+          },
+          {
+            id: 'word_book_6',
+            name: '六级核心词汇',
+            wordNum: '407词',
+            index: 'cet6_core'
+          },
+          {
+            id: 'word_book_7',
+            name: '软件测试',
+            wordNum: '500词',
+            index: 'software_testing'
+          },
+          {
+            id: 'word_book_8',
+            name: '专八词汇',
+            wordNum: '1938词',
+            index: 'tem8'
+          }
+        ]
+      });
+      wx.setStorage({
+        key: 'kaoyan',
+        data: require('../../data/kaoyan.js').wordList
+      });
+      wx.setStorage({
+        key: 'cet4',
+        data: require('../../data/cet4.js').wordList
+      });
+      wx.setStorage({
+        key: 'cet6',
+        data: require('../../data/cet6.js').wordList
+      });
+      wx.setStorage({
+        key: 'kaoyan_core',
+        data: require('../../data/kaoyan_core.js').wordList
+      });
+      wx.setStorage({
+        key: 'cet4_core',
+        data: require('../../data/cet4_core.js').wordList
+      });
+      wx.setStorage({
+        key: 'cet6_core',
+        data: require('../../data/cet6_core.js').wordList
+      });
+      wx.setStorage({
+        key: 'software_testing',
+        data: require('../../data/software_testing.js').wordList
+      });
+      wx.setStorage({
+        key: 'tem8',
+        data: require('../../data/tem8.js').wordList
+      });
+    }
+    this.wordBooksIndex = wx.getStorageSync('word_books_index');
+  }
+  onReachBottom() {
+    if (!this.isChoice) return;
+    if (this.isLoadAll) return;
+    this.loadWordList();
+  }
+  // 重新排序规划单词
+  sort_wordList() {
+    var last_list = wx.getStorageSync('word_list');
+    var len = last_list.length;
+    for (var i = 0; i < len; i++) {
+      for (var j = i + 1; j < len; j++) {
+        if (last_list[j].ease < last_list[i].ease) {
+          var temp = last_list[j];
+          last_list[j] = last_list[i];
+          last_list[i] = temp;
+        } else {
+          if (
+            last_list[j].ease === last_list[i].ease &&
+            last_list[j].day > last_list[i].day
+          ) {
+            var temp = last_list[j];
+            last_list[j] = last_list[i];
+            last_list[i] = temp;
+          }
+        }
+      }
+    }
+    wx.setStorageSync('word_list', last_list);
+    var day_num = wx.getStorageSync('day_task');
+    var today_list = [];
+    for (var i = 0, k = 0; i < len; i++) {
+      if (k === day_num || (last_list[i].ease > 0.5 && last_list[i].day > 3))
+        break;
+      today_list[k++] = last_list[i];
+    }
+    wx.setStorage({
+      key: 'today_word',
+      data: today_list
+    });
+  }
+  // 加载单词列表
+  loadWordList() {
+    // 拿到当前选择的单词书的Index
+    var bookIndex = wx.getStorageSync('book_index');
+    var storeWordList = wx.getStorageSync(bookIndex);
+    // 如果选择的单词书内的单词大于 20，分段加载
+    if (storeWordList.length > 20) {
+      this.bookWordList = this.bookWordList.concat(
+        storeWordList.slice(this.startPosition, this.endPosition)
+      );
+      this.startPosition += 20;
+      this.endPosition += 20;
+    } else {
+      this.bookWordList = storeWordList;
+      this.isLoadAll = true;
+    }
+    if (this.bookWordList.length === storeWordList.length)
+      this.isLoadAll = true;
+  }
+}
+</script>

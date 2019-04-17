@@ -1,0 +1,169 @@
+<style lang="less">
+.header {
+  display: flex;
+  position: relative;
+  justify-content: center;
+  margin-bottom: 30rpx;
+}
+.canvas {
+  width: 100%;
+  height: 600rpx;
+  align-content: left;
+  align-items: left;
+  text-align: left;
+}
+.statistic {
+  display: flex;
+  flex-direction: column;
+  font-size: 32rpx;
+  > view {
+    margin-top: 30rpx;
+    padding-left: 30rpx;
+  }
+  .words_num {
+    border-left: 10rpx solid cornflowerblue;
+    color: cornflowerblue;
+  }
+  .articles_num {
+    border-left: 10rpx solid orange;
+    color: orange;
+  }
+}
+</style>
+
+<template lang="wxml">
+  <view class="container">
+    <view class="header">短文进度
+      <view class="underline"></view>
+    </view>
+    <canvas class="canvas" canvas-id="lineCanvas" disable-scroll="true" bindtouchstart="touchHandler" bindtouchmove="moveHandler" bindtouchend="touchEndHandler"></canvas>
+    <view class="statistic">
+      <view class='words_num'>阅读单词量 | 今日: {{todayWordsNum}} 个 | 总计: {{sumWordsNum}} 个</view>
+      <view class='articles_num'>阅读短文量 | 今日: {{todayArticlesNum}} 篇 | 总计: {{sumArticlesNum}} 篇</view>
+    </view>
+  </view>
+</template>
+
+<script>
+import wepy from 'wepy';
+var wxCharts = require('../../utils/wxcharts.js');
+var lineChart = null;
+export default class ArticlesStatistic extends wepy.page {
+  config = {
+    navigationBarTitleText: '短文进度'
+  };
+  data = {
+    todayWordsNum: 0,
+    sumWordsNum: 0,
+    todayArticlesNum: 0,
+    sumArticlesNum: 0
+  };
+  methods = {};
+  onLoad() {
+    var windowWidth = 320;
+    try {
+      var res = wx.getSystemInfoSync();
+      windowWidth = res.windowWidth;
+    } catch (e) {
+      console.error('getSystemInfoSync failed!');
+    }
+    var simulationData = this.createSimulationData();
+    lineChart = new wxCharts({
+      canvasId: 'lineCanvas',
+      type: 'line',
+      categories: simulationData.categories,
+      animation: false,
+      series: [
+        {
+          name: '单词量',
+          data: simulationData.words,
+          format: (val, name) => {
+            return val.toFixed(2);
+          }
+        }
+      ],
+      xAxis: {
+        disableGrid: false
+      },
+      yAxis: {
+        format: function(val) {
+          return val.toFixed(2);
+        },
+        min: 0
+      },
+      width: windowWidth,
+      height: 260,
+      dataLabel: true,
+      dataPointShape: true,
+      enableScroll: true,
+      extra: {
+        lineStyle: 'curve'
+      }
+    });
+    this.todayWordsNum = wx.getStorageSync('today_articles_detail').words_num;
+    this.todayArticlesNum = wx.getStorageSync('today_articles_detail').articles_num;
+    this.sumWordsNum = wx.getStorageSync('sum_articles_detail').words_num;
+    this.sumArticlesNum = wx.getStorageSync('sum_articles_detail').articles_num;
+  }
+  /**
+   * 生命周期函数--监听页面初次渲染完成
+   */
+  onReady() {
+    this.onLoad();
+  }
+  /**
+   * 生命周期函数--监听页面显示
+   */
+  onShow() {
+    this.onLoad();
+  }
+  touchHandler(e) {
+    lineChart.scrollStart(e);
+  }
+  moveHandler(e) {
+    lineChart.scroll(e);
+  }
+  touchEndHandler(e) {
+    lineChart.scrollEnd(e);
+    lineChart.showToolTip(e, {
+      format: (item, category) => {
+        return category + ' ' + item.name + ':' + item.data;
+      }
+    });
+  }
+  createSimulationData() {
+    var categories = [];
+    var words = [];
+    var all_detail = wx.getStorageSync('all_articles_detail');
+    var length = all_detail.length;
+    if (length === 0) {
+      for (var i = 0; i < 15; i++) {
+        categories.push('2019-5-' + i);
+        words.push(50 + Math.random() * (25 - 10) + 10);
+      }
+    } else if (length < 15) {
+      for (var i = 0; i < 15; i++) {
+        if (i < length) {
+          categories.push(all_detail[i].day);
+          words.push(all_detail[i].words_num);
+        } else {
+          categories.push('未来');
+          words.push(
+            all_detail[length - 1].words_num + Math.random() * (15 - 10) + 2
+          );
+        }
+      }
+    } else {
+      var startPosition = length - 15;
+      for (var i = startPosition; i < length; i++) {
+        categories.push(all_detail[i].day);
+        words.push(all_detail[i].words);
+      }
+    }
+    return {
+      categories: categories,
+      words: words
+    };
+  }
+}
+</script>

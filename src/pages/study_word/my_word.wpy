@@ -1,0 +1,134 @@
+<style lang="less">
+.header {
+  display: flex;
+  width: 100%;
+  .header_item {
+    width: 50%;
+    text-align: center;
+  }
+}
+.name_underline {
+  position: relative;
+}
+.word_detail {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 100rpx;
+  width: 100%;
+  padding: 0 60rpx;
+  border-bottom: 0.2rpx solid rgba(187, 187, 187, 1);
+  view {
+    font-size: 32rpx;
+  }
+  .other {
+    display: flex;
+  }
+}
+</style>
+
+<template lang="wxml">
+  <view class="container">
+    <view class="header">
+      <view class="header_item name_underline" @tap="switchShow('remember')">已掌握
+        <view class="underline" wx:if="{{ isRemember }}"></view>
+      </view>
+      <view class="header_item name_underline" @tap="switchShow('schedule')">已规划
+        <view class="underline" wx:if="{{ !isRemember }}"></view>
+      </view>
+    </view>
+    <repeat wx:if="{{ isRemember }}" for="{{ wordList }}" key="index" index="index" item="item">
+      <myWord :item="item"></myWord>
+    </repeat>
+    <repeat wx:if="{{ !isRemember }}" for="{{ wordList }}" key="index" index="index" item="item">
+      <myWord :item="item"></myWord>
+    </repeat>
+    <view class="word_detail" wx:if="{{ isLoadAll }}">没有更多了~</view>
+  </view>
+</template>
+
+<script>
+import wepy from 'wepy';
+import MyWord from '../../components/my-word';
+export default class AllMyWord extends wepy.page {
+  components = {
+    myWord: MyWord
+  };
+  config = {
+    navigationBarTitleText: '我的词库'
+  };
+  data = {
+    isRemember: true,
+    wordList: [],
+    isLoadAll: false,
+    scheduleWords: [],
+    rememberWords: [],
+    startPosition: 0,
+    endPosition: 20
+  };
+  methods = {
+    switchShow(name) {
+      switch (name) {
+        case 'remember':
+          this.isRemember = true;
+          this.wordList = [];
+          this.startPosition = 0;
+          this.endPosition = 20;
+          this.isLoadAll = false;
+          this.loadWordList();
+          break;
+        case 'schedule':
+          this.isRemember = false;
+          this.wordList = [];
+          this.startPosition = 0;
+          this.endPosition = 20;
+          this.isLoadAll = false;
+          this.loadWordList();
+          break;
+      }
+    }
+  };
+  onLoad() {
+    this.scheduleWords = wx.getStorageSync('word_list');
+    this.rememberWords = wx.getStorageSync('remember_words');
+    console.log(wx.getStorageSync('word_list'));
+    this.loadWordList();
+  }
+  onReachBottom() {
+    if (this.isLoadAll) return;
+    this.loadWordList();
+  }
+  // 加载单词列表
+  loadWordList() {
+    if (this.isRemember) {
+      // 如果单词列表内的单词大于 20，分段加载
+      if (this.rememberWords.length > 20) {
+        this.wordList = this.wordList.concat(
+          this.rememberWords.slice(this.startPosition, this.endPosition)
+        );
+        this.startPosition += 20;
+        this.endPosition += 20;
+      } else {
+        this.wordList = this.rememberWords;
+        this.isLoadAll = true;
+      }
+      if (this.wordList.length === this.rememberWords.length)
+        this.isLoadAll = true;
+    } else {
+      // 如果单词列表内的单词大于 20，分段加载
+      if (this.scheduleWords.length > 20) {
+        this.wordList = this.wordList.concat(
+          this.scheduleWords.slice(this.startPosition, this.endPosition)
+        );
+        this.startPosition += 20;
+        this.endPosition += 20;
+      } else {
+        this.wordList = this.scheduleWords;
+        this.isLoadAll = true;
+      }
+      if (this.wordList.length === this.scheduleWords.length)
+        this.isLoadAll = true;
+    }
+  }
+}
+</script>

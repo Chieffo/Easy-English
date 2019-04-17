@@ -1,0 +1,113 @@
+<style lang="less">
+.article {
+  width: 100%;
+}
+.loadArticle {
+  width: 100%;
+  text-align: center;
+  color: gray;
+  opacity: 0.8;
+  margin-bottom: 20rpx;
+  image {
+    width: 70rpx;
+    height: 70rpx;
+  }
+}
+</style>
+
+<template lang="wxml">
+  <view class="container">
+    <view class="article">
+      <repeat for="{{myArticlesList}}">
+        <view @tap="tap({{item.id}})" wx:if="{{item.id}}">
+          <card :title="item.title_en" :content="item.summary" :grade="item.grade_info" :words="item.length" :reviews="item.num_reviews" :thumbnail="item.thumbnail_urls[0]" />
+        </view>
+      </repeat>
+    </view>
+    <view class="loadArticle" wx:if="{{ isLoadAll }}">没有更多了~</view>
+    <view class="loadArticle" wx:if="{{ isLoadMore }}">
+      <image src="../../assets/loading.gif" />
+    </view>
+  </view>
+</template>
+
+<script>
+import wepy from 'wepy';
+import Card from '../../components/card';
+export default class MyArticles extends wepy.page {
+  config = {
+    navigationBarTitleText: '我的短文'
+  };
+  components = {
+    card: Card
+  };
+  data = {
+    myArticleIds: [],
+    myArticlesList: [],
+    isLoadAll: false,
+    isLoadMore: false,
+    idPosition: 0 // 我的文章id在数组中的下标
+  };
+  methods = {
+    tap(id) {
+      wx.navigateTo({
+        url: `../study_article/article?id=${id}` // 打开一个新的同路由页面，但指定不同的数据初始值
+      });
+    }
+  };
+  onLoad() {
+    wx.showLoading({
+      title: '加载中'
+    });
+    this.myArticleIds = wx.getStorageSync('my_articles');
+    this.loadMyArticles();
+    wx.hideLoading();
+  }
+  onReachBottom() {
+    if (this.isLoadAll) return;
+    this.loadMyArticles();
+  }
+  // 加载我的短文
+  loadMyArticles() {
+    var that = this;
+    // 如果超过十篇短文，分段加载
+    if (this.myArticleIds.length > 10) {
+      this.isLoadMore = true;
+      for (let i = 0; i < 10; i++) {
+        if (this.idPosition === this.myArticleIds.length) {
+          this.isLoadAll = true;
+          break;
+        }
+        wx.request({
+          url: `https://www.shanbay.com/api/v2/news/articles/${
+            this.myArticleIds[idPosition]
+          }/`,
+          success: res => {
+            if (res.data.msg === 'SUCCESS') {
+              that.myArticlesList.push(res.data.data);
+            }
+            that.$apply();
+          }
+        });
+        this.idPosition++;
+      }
+      this.isLoadMore = false;
+    } else {
+      this.isLoadMore = true;
+      for (const id of this.myArticleIds) {
+        wx.request({
+          url: `https://www.shanbay.com/api/v2/news/articles/${id}/`,
+          success: res => {
+            if (res.data.msg === 'SUCCESS') {
+              that.myArticlesList.push(res.data.data);
+            }
+            that.$apply();
+          }
+        });
+      }
+      this.isLoadMore = false;
+      this.isLoadAll = true;
+    }
+  }
+}
+</script>

@@ -1,0 +1,21 @@
+<style lang="less">
+</style>
+
+<template lang="wxml">
+  <view class="container">
+      这个人很神秘，什么都没有留下！
+  </view>
+</template>
+
+<script>
+import wepy from 'wepy';
+
+export default class About extends wepy.page {
+  config = {
+    navigationBarTitleText: 'about'
+  };
+  data = {};
+  methods = {};
+  onLoad() {}
+}
+</script>

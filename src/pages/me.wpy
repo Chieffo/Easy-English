@@ -1,0 +1,382 @@
+<style lang="less">
+.img_size {
+  image {
+    width: 60rpx;
+    height: 60rpx;
+    margin-bottom: 20rpx;
+  }
+}
+.user {
+  display: flex;
+  width: 100%;
+  height: 200rpx;
+  border-bottom: 2rpx solid rgba(187, 187, 187, 1);
+  .user_info {
+    display: flex;
+    justify-content: left;
+    align-items: center;
+    width: 65%;
+  }
+  .user_avatar {
+    width: 180rpx;
+    height: 180rpx;
+    margin: 20rpx;
+  }
+  .user_detail {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    .middle_font {
+      font-size: 40rpx;
+    }
+  }
+  .border {
+    align-self: center;
+    height: 100rpx;
+    border-right: 1rpx solid #8f8f8f;
+  }
+  .calendar {
+    width: 35%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    image {
+      margin-left: 10rpx;
+      width: 30rpx;
+      height: 30rpx;
+    }
+  }
+}
+.user_item {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+  margin-top: 60rpx;
+  padding-bottom: 20rpx;
+  border-bottom: 2rpx solid rgba(187, 187, 187, 1);
+  .title {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    height: 80rpx;
+    color: #666666;
+    font-size: 28rpx;
+  }
+  .content {
+    display: flex;
+    width: 100%;
+  }
+  .item_detail {
+    margin-bottom: 10rpx;
+    width: 300rpx;
+    color: #666666;
+    font-size: 32rpx;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+  }
+}
+</style>
+
+<template lang="wxml">
+  <view class="container">
+    <view class="user">
+      <view class="user_info">
+        <image class="user_avatar" src="{{ userAvatar }}"></image>
+        <view class="user_detail">
+          <view class="middle_font">{{ userNickName }}</view>
+          <view class="small_font">ID:{{ userId }}</view>
+        </view>
+      </view>
+      <view class="border"></view>
+      <view class="calendar">
+        <view class="big_font">{{ day_num }}
+          <image src="../assets/calendar.png"></image>
+        </view>
+      </view>
+    </view>
+    <view class="user_item img_size">
+      <view class="title">—— 我的单词 ——</view>
+      <view class="content">
+        <view class="item_detail" @tap="choiceWords">
+          <image src="../assets/word_book.png"></image>
+          单词书
+        </view>
+        <view class="item_detail" @tap="goMyWord">
+          <image src="../assets/my_vocabulary.png"></image>
+          我的词库
+        </view>
+        <view class="item_detail">
+          <image src="../assets/word_progress.png" @tap="goStatistic"></image>
+          单词进度
+        </view>
+      </view>
+    </view>
+    <view class="user_item img_size">
+      <view class="title">—— 我的阅读 ——</view>
+      <view class="content">
+        <view class="item_detail">
+          <image src="../assets/remark.png" @tap="goComments"></image>
+          读后感
+        </view>
+        <view class="item_detail" @tap="goMyArticles">
+          <image src="../assets/my_article.png"></image>
+          我的短文
+        </view>
+        <view class="item_detail" @tap="goArticlesStatistic">
+          <image src="../assets/article_progress.png"></image>
+          短文进度
+        </view>
+      </view>
+    </view>
+    <view class="user_item img_size" style="border: none; margin-top: 60rpx;">
+      <view class="content">
+        <view class="item_detail" @tap="clickBackup">
+          <image src="../assets/backup.png"></image>
+          备份
+        </view>
+        <view class="item_detail" @tap="clickRestore">
+          <image src="../assets/restore.png"></image>
+          还原
+        </view>
+        <view class="item_detail" @tap="goSetting">
+          <image src="../assets/setting.png"></image>
+          设置
+        </view>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script>
+import wepy from 'wepy';
+export default class Me extends wepy.page {
+  config = {};
+  data = {
+    userAvatar: [],
+    userNickName: [],
+    userId: [],
+    day_num: []
+  };
+  methods = {
+    // 添加规划单词
+    choiceWords() {
+      this.$navigate({
+        url: './study_word/choice_word'
+      });
+    },
+    // 设置
+    goSetting() {
+      this.$navigate({
+        url: './setting'
+      });
+    },
+    // 我的词库
+    goMyWord() {
+      this.$navigate({
+        url: './study_word/my_word'
+      });
+    },
+    // 我的进度
+    goStatistic() {
+      this.$navigate({
+        url: './study_word/statistic'
+      });
+    },
+    // 点击备份
+    clickBackup() {
+      var that = this;
+      wx.showModal({
+        title: '提示',
+        content: '备份会覆盖云端数据且不可撤消！',
+        success: function(res) {
+          if (res.confirm) {
+            console.log('用户点击确定');
+            that.backUp();
+          } else {
+            console.log('用户点击取消');
+          }
+        }
+      });
+    },
+    // 点击还原
+    clickRestore() {
+      var that = this;
+      wx.showModal({
+        title: '提示',
+        content: '还原会覆盖本地数据且不可撤消！',
+        success: function(res) {
+          if (res.confirm) {
+            console.log('用户点击确定');
+            that.restore();
+          } else {
+            console.log('用户点击取消');
+          }
+        }
+      });
+    },
+    // 我的评论
+    goComments() {
+      this.$navigate({
+        url: './study_article/comments'
+      });
+    },
+    // 我的短文
+    goMyArticles() {
+      this.$navigate({
+        url: './study_article/my_articles'
+      });
+    },
+    // 短文进度
+    goArticlesStatistic() {
+      this.$navigate({
+        url: './study_article/articles_statistic'
+      });
+    }
+  };
+  onLoad() {
+    this.userAvatar = wx.getStorageSync('userInfo').avatarUrl;
+    this.userNickName = wx.getStorageSync('userInfo').nickName;
+    this.userId = wx.getStorageSync('usr_objectId');
+    this.day_num = wx.getStorageSync('day_num');
+  }
+  // 备份
+  backUp() {
+    const query = this.$parent.globalData.Bmob.Query('user_data');
+    var dataObjId = wx.getStorageSync('data_objectid');
+    if (!dataObjId) {
+      query.set('username', wx.getStorageSync('userInfo').nickName);
+      query.set('word_list', wx.getStorageSync('word_list'));
+      query.set('day_num', wx.getStorageSync('day_num'));
+      query.set('openid', wx.getStorageSync('openid'));
+      query.set('all_detail', wx.getStorageSync('all_detail'));
+      query.set('day_task', wx.getStorageSync('day_task'));
+      query.set('remember_words', wx.getStorageSync('remember_words'));
+      query.set('my_articles', wx.getStorageSync('my_articles'));
+      query.set(
+        'sum_articles_detail',
+        wx.getStorageSync('sum_articles_detail')
+      );
+      query.set(
+        'all_articles_detail',
+        wx.getStorageSync('all_articles_detail')
+      );
+      query
+        .save()
+        .then(res => {
+          console.log(res);
+          wx.setStorage({
+            key: 'data_objectid',
+            data: res.objectId
+          });
+          const query2 = this.$parent.globalData.Bmob.Query('_User');
+          query2
+            .get(wx.getStorageSync('usr_objectId'))
+            .then(res => {
+              console.log(res);
+              res.set('data_objectid', wx.getStorageSync('data_objectid'));
+              res.save();
+            })
+            .catch(err => {
+              console.log('query2', err);
+              wx.showToast({
+                title: '备份失败'
+              });
+            });
+          wx.showToast({
+            title: '备份成功'
+          });
+        })
+        .catch(err => {
+          console.log('query1', err);
+          wx.showToast({
+            title: '备份失败'
+          });
+        });
+    } else {
+      query
+        .get(dataObjId)
+        .then(res => {
+          console.log(res);
+          res.set('username', wx.getStorageSync('userInfo').nickName);
+          res.set('word_list', wx.getStorageSync('word_list'));
+          res.set('day_num', wx.getStorageSync('day_num'));
+          res.set('openid', wx.getStorageSync('openid'));
+          res.set('all_detail', wx.getStorageSync('all_detail'));
+          res.set('day_task', wx.getStorageSync('day_task'));
+          res.set('remember_words', wx.getStorageSync('remember_words'));
+          res.set('my_articles', wx.getStorageSync('my_articles'));
+          res.set(
+            'sum_articles_detail',
+            wx.getStorageSync('sum_articles_detail')
+          );
+          res.set(
+            'all_articles_detail',
+            wx.getStorageSync('all_articles_detail')
+          );
+          res.save();
+          wx.showToast({
+            title: '备份成功'
+          });
+        })
+        .catch(err => {
+          console.log(err);
+          wx.showToast({
+            title: '备份失败'
+          });
+        });
+    }
+  }
+  // 还原
+  restore() {
+    const query = this.$parent.globalData.Bmob.Query('user_data');
+    query
+      .get(wx.getStorageSync('data_objectid'))
+      .then(res => {
+        wx.setStorage({
+          key: 'word_list',
+          data: res.word_list
+        });
+        wx.setStorage({
+          key: 'day_num',
+          data: res.day_num
+        });
+        wx.setStorage({
+          key: 'all_detail',
+          data: res.all_detail
+        });
+        wx.setStorage({
+          key: 'day_task',
+          data: res.day_task
+        });
+        wx.setStorage({
+          key: 'remember_words',
+          data: res.remember_words
+        });
+        wx.setStorage({
+          key: 'my_articles',
+          data: res.my_articles
+        });
+        wx.setStorage({
+          key: 'sum_articles_detail',
+          data: res.sum_articles_detail
+        });
+        wx.setStorage({
+          key: 'all_articles_detail',
+          data: res.all_articles_detail
+        });
+        wx.showToast({
+          title: '还原成功'
+        });
+      })
+      .catch(err => {
+        console.log(err);
+        wx.showModal({
+          title: '还原失败',
+          content: '请确认登陆并有先前的备份！'
+        });
+      });
+  }
+}
+</script>

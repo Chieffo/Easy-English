@@ -1,0 +1,247 @@
+<style lang="less">
+.header {
+  display: flex;
+  align-items: center;
+  padding-left: 10rpx;
+  margin-left: 20rpx;
+  height: 60rpx;
+  width: 100%;
+  border-left: 10rpx solid #79c89e;
+  font-size: 36rpx;
+  > text {
+    font-size: 50rpx;
+    color: #79c89e;
+  }
+}
+.comment_items {
+  display: flex;
+  margin-top: 30rpx;
+  width: 100%;
+  .avatar {
+    width: 15%;
+    image {
+      width: 100rpx;
+      height: 100rpx;
+    }
+  }
+  .detail {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    margin-left: 20rpx;
+    width: 85%;
+  }
+  .content_menu {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 50rpx;
+    .menu_left {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      .name {
+        font-size: 32rpx;
+        color: #79c89e;
+        margin-right: 20rpx;
+      }
+      .time {
+        font-size: 28rpx;
+        font-weight: bold;
+        color: gray;
+      }
+    }
+    .menu_right {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      image {
+        margin-right: 20rpx;
+        width: 40rpx;
+        height: 40rpx;
+      }
+    }
+  }
+  .content {
+    margin: 20rpx;
+    width: 100%;
+    font-size: 32rpx;
+  }
+}
+.add_comment {
+  position: fixed;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 60rpx;
+  width: 96%;
+  background: #fff;
+  .add_header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20rpx;
+    height: 80rpx;
+    width: 100%;
+    > view {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 36rpx;
+      color: #79c89e;
+    }
+    image {
+      margin-right: 10rpx;
+      width: 60rpx;
+      height: 60rpx;
+    }
+    button {
+      margin: 0;
+      width: 150rpx;
+      height: 60rpx;
+      border: 1rpx solid #79c89e;
+      border-radius: 10rpx;
+      color: #79c89e;
+      text-align: center;
+      font-size: 30rpx;
+      background: white;
+    }
+  }
+  textarea {
+    width: 100%;
+    border-bottom: 1rpx solid #79c89e;
+    font-size: 36rpx;
+  }
+}
+</style>
+
+<template lang="wxml">
+  <view class="container">
+    <view class="header">我一共反馈了<text>{{strSpace}}{{ commentsNum }}{{strSpace}}</text>次建议</view>
+    <!-- 我的反馈建议 -->
+    <view class="comment_items" wx:if="{{allCommentsShow.length !== 0}}" wx:for="{{allCommentsShow}}" wx:key="index">
+      <view class="avatar">
+        <image src="{{ item.user_avatarUrl }}"></image>
+      </view>
+      <view class="detail">
+        <view class="content_menu">
+          <view class="menu_left">
+            <view class="name">{{ item.user_name }}</view>
+            <view class="time">{{ item.updatedAt }}</view>
+          </view>
+          <view class="menu_right">
+          </view>
+        </view>
+        <view class="content">{{ item.suggestion_content }}</view>
+      </view>
+    </view>
+    <view wx:if="{{isLoadAll}}" style="margin-top: 30rpx; color: #bababa;">没有更多了~</view>
+    <view class="add_comment" wx:if="{{isAdd}}">
+      <view class="add_header">
+        <view>
+          <image src="../../assets/modify.png"></image>
+          反馈建议
+        </view>
+        <button @tap="submit">提交</button>
+      </view>
+      <textarea value="{{inputValue}}"
+                placeholder="请描述您的问题"
+                auto-focus="{{true}}"
+                auto-height="{{true}}"
+                fixed="{{true}}"
+                adjust-position="{{true}}"
+                bindinput="setInputValue"/>
+    </view>
+  </view>
+</template>
+
+<script>
+import wepy from 'wepy';
+
+export default class Suggestion extends wepy.page {
+  config = {
+    navigationBarTitleText: '反馈建议'
+  };
+  data = {
+    strSpace: ' ', // 空格字符串变量，为了在小程序中显示空格
+    inputValue: '',
+    allComments: [],
+    allCommentsShow: [],
+    commentsNum: 0,
+    startPosition: 0,
+    endPosition: 19,
+    isLoadAll: false,
+    isAdd: true
+  };
+  methods = {
+    setInputValue(e) {
+      this.inputValue = e.detail.value;
+    },
+    submit() {
+      if (!this.inputValue) {
+        wx.showToast({
+          title: '无内容！',
+          icon: 'none'
+        });
+        return;
+      } else {
+        const query = this.$parent.globalData.Bmob.Query('suggestion');
+        query.set('usr_objectId', this.userId);
+        query.set('user_avatarUrl', wx.getStorageSync('userInfo').avatarUrl);
+        query.set('user_name', wx.getStorageSync('userInfo').nickName);
+        query.set('suggestion_content', this.inputValue);
+        query
+          .save()
+          .then(res => {
+            console.log(res);
+            this.onLoad();
+            this.isAdd = false;
+          })
+          .catch(err => {
+            console.log(err);
+          });
+      }
+    }
+  };
+  onLoad() {
+    wx.showLoading({
+      title: '加载中'
+    });
+    this.userId = wx.getStorageSync('usr_objectId');
+    this.startPosition = 0;
+    this.endPosition = 19;
+
+    const query = this.$parent.globalData.Bmob.Query('suggestion');
+    // 查询所有的反馈建议
+    // 两条查询语句一起写，就相当于AND查询
+    query.equalTo('usr_objectId', '==', this.userId);
+    query.find().then(res => {
+      console.log(res);
+      this.allComments = res;
+      this.commentsNum = res.length;
+      this.loadComments();
+      this.$apply();
+      wx.hideLoading();
+    });
+  }
+  onReachBottom() {
+    if (this.isLoadAll) return;
+    this.loadComments();
+  }
+  loadComments() {
+    if (this.allComments.length > 20) {
+      this.allCommentsShow = this.allCommentsShow.concat(
+        this.allComments.slice(this.startPosition, this.endPosition)
+      );
+      this.startPosition += 20;
+      this.endPosition += 20;
+    } else {
+      this.allCommentsShow = this.allComments;
+      this.isLoadAll = true;
+    }
+    if (this.allCommentsShow.length === this.allComments.length) {
+      this.isLoadAll = true;
+    }
+  }
+}
+</script>

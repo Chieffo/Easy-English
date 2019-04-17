@@ -1,0 +1,139 @@
+<style lang="less">
+.header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  margin-bottom: 10rpx 0;
+  font-size: 40rpx;
+}
+.setting_item {
+  width: 100%;
+  height: 160rpx;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 30rpx;
+  padding-right: 30rpx;
+  width: 100%;
+  .item_left {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 100%;
+    border-left: 20rpx solid #d6f0c8;
+    padding-left: 20rpx;
+  }
+  .item_right {
+    button {
+      background: none;
+      border: none;
+      padding-right: 0;
+    }
+    button::after {
+      border: none;
+    }
+  }
+  .item_picker {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 56rpx;
+    line-height: 56rpx;
+    color: #79c89e;
+  }
+  image {
+    width: 60rpx;
+    height: 60rpx;
+  }
+}
+</style>
+
+<template lang="wxml">
+  <view class="container">
+    <view class="header">设置<view class="underline"></view></view>
+    <view class="setting_item">
+      <view class="item_left">
+        <view>每日学习量</view>
+        <view class="small_font">当日复习的词量 + 当日新学词量</view>
+      </view>
+      <view>
+        <picker bindchange="setDayTask" value="{{ taskNumPosition }}" range="{{ taskNumSeries }}">
+          <view class="item_picker">{{taskNumSeries[taskNumPosition]}}</view>
+        </picker>
+      </view>
+    </view>
+    <view class="setting_item">
+      <view class="item_left">
+        <view>反馈建议</view>
+      </view>
+      <view @tap="goSuggestion">
+        <image src="../assets/modify.png"></image>
+      </view>
+    </view>
+    <view class="setting_item">
+      <view class="item_left">
+        <view>分享小程序</view>
+      </view>
+      <view class="item_right">
+        <button open-type="share"><image src="../assets/forward.png"></image></button>
+      </view>
+    </view>
+    <view class="setting_item" @tap="goAbout">
+      <view class="item_left">
+        <view>about</view>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script>
+import wepy from 'wepy';
+
+export default class Setting extends wepy.page {
+  config = {
+    navigationBarTitleText: '设置'
+  };
+  data = {
+    taskNumSeries: [],
+    taskNumPosition: null
+  };
+  methods = {
+    // 反馈建议
+    goSuggestion() {
+      this.$navigate({
+        url: './suggestion'
+      });
+    },
+    // 关于
+    goAbout() {
+      this.$navigate({
+        url: './about'
+      });
+    }
+  };
+  onLoad() {
+    this.taskNumSeries = new Array(191)
+      .fill('')
+      .map((item, index) => index + 10);
+    this.taskNumPosition = this.taskNumSeries.indexOf(
+      wx.getStorageSync('day_task')
+    );
+  }
+  //页面分享函数
+  onShareAppMessage() {
+    return {
+      title: '快来轻英语和我一起轻松学英语！',
+      path: './index'
+    };
+  }
+  setDayTask(e) {
+    this.taskNumPosition = e.detail.value;
+    wx.setStorage({
+      key: 'day_task',
+      data: this.taskNumSeries[e.detail.value]
+    });
+    this.$parent.arrangeWords();
+  }
+}
+</script>

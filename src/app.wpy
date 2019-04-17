@@ -1,4 +1,9 @@
 <style lang="less">
+button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 .container {
   height: 100%;
   display: flex;
@@ -6,69 +11,440 @@
   align-items: center;
   justify-content: space-between;
   box-sizing: border-box;
+  margin: 20rpx;
+}
+.small_font {
+  color: #bababa;
+  font-size: 24rpx;
+}
+.middle_font {
+  color: #666666;
+  font-size: 56rpx;
+}
+.big_font {
+  color: #79c89e;
+  font-size: 96rpx;
+}
+.underline {
+  position: absolute;
+  z-index: -1;
+  width: 100%;
+  height: 30rpx;
+  bottom: 0rpx;
+  background: #d6f0c8;
 }
 </style>
 
 <script>
-import wepy from 'wepy'
-import 'wepy-async-function'
-
-import { setStore } from 'wepy-redux'
-import configStore from './store'
-
-const store = configStore()
-setStore(store)
-
+import wepy from 'wepy';
+import Bmob from 'hydrogen-js-sdk';
+import 'wepy-async-function';
+// Bmob.initialize("你的Application ID", "你的REST API Key");
+Bmob.initialize(
+  '8a923b835b57360bf2d0659b648aeb15',
+  '5d431f45438935b3618c2f7826e4062e'
+);
 export default class extends wepy.app {
   config = {
     pages: [
-      'pages/index'
+      'pages/login',
+      'pages/index',
+      'pages/search',
+      'pages/me',
+      'pages/setting',
+      'pages/study_word/word',
+      'pages/study_word/choice_word',
+      'pages/study_word/my_word',
+      'pages/study_word/statistic',
+      'pages/study_article/article',
+      'pages/study_article/articles_statistic',
+      'pages/study_article/my_articles',
+      'pages/study_article/comments',
+      'pages/suggestion',
+      'pages/about'
     ],
+    tabBar: {
+      color: '#000',
+      selectedColor: '#000',
+      borderStyle: 'white',
+      backgroundColor: '#ffffff',
+      list: [
+        {
+          pagePath: 'pages/index',
+          text: '首页',
+          iconPath: './assets/home.png',
+          selectedIconPath: './assets/home2.png'
+        },
+        {
+          pagePath: 'pages/search',
+          text: '查词',
+          iconPath: './assets/search.png',
+          selectedIconPath: './assets/search2.png'
+        },
+        {
+          pagePath: 'pages/me',
+          text: '我的',
+          iconPath: './assets/me.png',
+          selectedIconPath: './assets/me2.png'
+        }
+      ]
+    },
     window: {
       backgroundTextStyle: 'light',
-      navigationBarBackgroundColor: '#fff',
-      navigationBarTitleText: 'WeChat',
+      navigationBarBackgroundColor: '#79C89E',
+      navigationBarTitleText: '轻英语',
       navigationBarTextStyle: 'black'
     }
-  }
-
+  };
   globalData = {
-    userInfo: null
+    Bmob: Bmob,
+    time: '' // 当天日期
+  };
+  constructor() {
+    super();
+    this.use('requestfix');
+    this.use('promisify');
   }
-
-  constructor () {
-    super()
-    this.use('requestfix')
-  }
-
   onLaunch() {
-    this.testAsync()
-  }
+    Bmob.User.auth()
+      .then(res => {
+        console.log(res);
+        console.log('一键登陆成功');
+        const query = Bmob.Query('_User');
+        query
+          .get(res.objectId)
+          .then(res => {
+            console.log('res2', res);
+            wx.setStorage({
+              key: 'data_objectid',
+              data: res.data_objectid
+            });
+          })
+          .catch(err => {
+            console.log(err);
+          });
+        wx.setStorage({
+          key: 'usr_objectId',
+          data: res.objectId
+        });
+      })
+      .catch(err => {
+        console.log(err);
+      });
 
-  sleep (s) {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        resolve('promise resolved')
-      }, s * 1000)
-    })
-  }
-
-  async testAsync () {
-    const data = await this.sleep(3)
-    console.log(data)
-  }
-
-  getUserInfo(cb) {
-    const that = this
-    if (this.globalData.userInfo) {
-      return this.globalData.userInfo
+    // 初始化本地数据
+    if (
+      !wx.getStorageSync('word_list') &&
+      !wx.getStorageSync('all_detail') &&
+      !wx.getStorageSync('all_articles_detail')
+    ) {
+      wx.setStorage({
+        key: 'all_detail',
+        data: []
+      });
+      wx.setStorage({
+        key: 'word_list',
+        /* data: [{
+              "word": "equip",
+              "ease": 0.5,
+              "day": 0
+            },
+            {
+              "word": "frown",
+              "ease": 0.5,
+              "day": 0
+            },
+            {
+              "word": "fasten",
+              "ease": 0.5,
+              "day": 0
+            },
+            {
+              "word": "software",
+              "ease": 0.5,
+              "day": 0
+            },
+            {
+              "word": "stir",
+              "ease": 0.5,
+              "day": 0
+            },
+            {
+              "word": "distribution",
+              "ease": 0.5,
+              "day": 0
+            },
+            {
+              "word": "flexible",
+              "ease": 0.5,
+              "day": 0
+            },
+            {
+              "word": "solution",
+              "ease": 0.5,
+              "day": 0
+            },
+            {
+              "word": "lad",
+              "ease": 0.5,
+              "day": 0
+            },
+            {
+              "word": "panel",
+              "ease": 0.5,
+              "day": 0
+            },
+            {
+              "word": "ministry",
+              "ease": 0.5,
+              "day": 0
+            },
+            {
+              "word": "supreme",
+              "ease": 0.5,
+              "day": 0
+            },
+            {
+              "word": "supreme",
+              "ease": 0.5,
+              "day": 0
+            },
+            {
+              "word": "describe",
+              "ease": 0.5,
+              "day": 0
+            },
+            {
+              "word": "limb",
+              "ease": 0.5,
+              "day": 0
+            },
+            {
+              "word": "circumstance",
+              "ease": 0.5,
+              "day": 0
+            },
+            {
+              "word": "core",
+              "ease": 0.5,
+              "day": 0
+            },
+            {
+              "word": "assistant",
+              "ease": 0.5,
+              "day": 0
+            },
+            {
+              "word": "mess",
+              "ease": 0.5,
+              "day": 0
+            },
+            {
+              "word": "minus",
+              "ease": 0.5,
+              "day": 0
+            },
+            {
+              "word": "sector",
+              "ease": 0.5,
+              "day": 0
+            },
+            {
+              "word": "detection",
+              "ease": 0.5,
+              "day": 0
+            },
+            {
+              "word": "statue",
+              "ease": 0.5,
+              "day": 0
+            },
+            {
+              "word": "saucer",
+              "ease": 0.5,
+              "day": 0
+            },
+            {
+              "word": "skillful",
+              "ease": 0.5,
+              "day": 0
+            },
+            {
+              "word": "civilization",
+              "ease": 0.5,
+              "day": 0
+            },
+            {
+              "word": "overhead",
+              "ease": 0.5,
+              "day": 0
+            },
+            {
+              "word": "hobby",
+              "ease": 0.5,
+              "day": 0
+            },
+            {
+              "word": "statistic",
+              "ease": 0.5,
+              "day": 0
+            },
+            {
+              "word": "pregnant",
+              "ease": 0.5,
+              "day": 0
+            }
+          ], */
+        data: []
+      });
+      wx.setStorage({
+        key: 'day_num',
+        data: 0
+      });
+      wx.setStorage({
+        key: 'day_task',
+        data: 10
+      });
+      wx.setStorage({
+        key: 'remember_words',
+        data: []
+      });
+      wx.setStorage({
+        key: 'today_word',
+        data: []
+      });
+      wx.setStorage({
+        key: 'my_articles',
+        data: []
+      });
+      wx.setStorage({
+        key: 'all_articles_detail',
+        data: [
+          {
+            day: this.globalData.time,
+            words_num: 0,
+            articles_num: 0
+          }
+        ]
+      });
+      wx.setStorage({
+        key: 'sum_articles_detail',
+        data: {
+          words_num: 0,
+          articles_num: 0
+        }
+      });
     }
-    wepy.getUserInfo({
-      success (res) {
-        that.globalData.userInfo = res.userInfo
-        cb && cb(res.userInfo)
+
+    var time = this.set_time(new Date());
+    this.globalData.time = time;
+    // 如果是新的一天，安排学习数据
+    if (time != wx.getStorageSync('day')) {
+      this.arrangeWords();
+      this.arrangeArticles();
+    }
+  }
+
+  // 设置当天日期
+  set_time(date) {
+    var month = date.getMonth() + 1;
+    var day = date.getDate();
+    var year = date.getFullYear();
+    const formatNumber = n => {
+      n = n.toString();
+      return n[1] ? n : '0' + n;
+    };
+    return [year, month, day].map(formatNumber).join('/');
+  }
+
+  // 每天第一次登陆时触发，学习数据重置
+  arrangeWords() {
+    // 重置背单词的学习数据
+    wx.setStorage({
+      key: 'day',
+      data: this.globalData.time
+    });
+    wx.setStorage({
+      key: 'complete',
+      data: false
+    });
+    wx.setStorage({
+      key: 'first_login',
+      data: true
+    });
+    wx.setStorage({
+      key: this.globalData.time,
+      data: 0
+    });
+    if (!wx.getStorageSync('day_num')) {
+      wx.setStorage({
+        key: 'day_num',
+        data: 0
+      });
+    }
+    wx.setStorage({
+      key: 'today_detail',
+      data: {
+        day: this.globalData.time,
+        remember: 0,
+        blur: 0,
+        forget: 0
       }
-    })
+    });
+    // 安排当天的学习任务
+    var last_list = wx.getStorageSync('word_list'); // 待学习的单词列表
+    var len = last_list.length;
+    var task_num = wx.getStorageSync('day_task');
+    var today_list = [];
+    var word_num = 0;
+    // 把待学习的单词加入到今日单词列表
+    for (let i = 0; i < len; i++) {
+      if (
+        word_num === task_num ||
+        (last_list[i].ease > 0.5 && last_list[i].day < 3)
+      ) {
+        break;
+      }
+
+      today_list[word_num++] = last_list[i];
+    }
+    wx.setStorage({
+      key: 'today_word',
+      data: today_list
+    });
+    wx.setStorage({
+      key: 'today_new_num',
+      data: task_num - word_num
+    });
+    var task = [];
+    var task_detail = [];
+    for (let i = 0; i < task_num; i++) {
+      task[i] = i;
+      task_detail[i] = {
+        remember: 0,
+        blur: 0,
+        forget: 0
+      };
+    }
+    wx.setStorage({
+      key: 'task',
+      data: task
+    });
+    wx.setStorage({
+      key: 'task_detail',
+      data: task_detail
+    });
+  }
+  arrangeArticles() {
+    // 重置短文阅读的学习数据
+    wx.setStorage({
+      key: 'today_articles_detail',
+      data: {
+        day: this.globalData.time,
+        words_num: 0,
+        articles_num: 0
+      }
+    });
   }
 }
 </script>

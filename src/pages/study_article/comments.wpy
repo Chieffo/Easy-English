@@ -1,0 +1,377 @@
+<style lang="less">
+.header {
+  display: flex;
+  align-items: center;
+  padding-left: 10rpx;
+  margin-left: 20rpx;
+  height: 60rpx;
+  width: 100%;
+  border-left: 10rpx solid #79c89e;
+  font-size: 36rpx;
+  > text {
+    font-size: 50rpx;
+    color: #79c89e;
+  }
+}
+.comment_items {
+  display: flex;
+  margin-top: 30rpx;
+  width: 100%;
+  .avatar {
+    width: 15%;
+    image {
+      width: 100rpx;
+      height: 100rpx;
+    }
+  }
+  .detail {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    margin-left: 20rpx;
+    width: 85%;
+  }
+  .content_menu {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 50rpx;
+    .menu_left {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      .name {
+        font-size: 32rpx;
+        color: #79c89e;
+        margin-right: 20rpx;
+      }
+      .time {
+        font-size: 28rpx;
+        font-weight: bold;
+        color: gray;
+      }
+    }
+    .menu_right {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      image {
+        margin-right: 20rpx;
+        width: 40rpx;
+        height: 40rpx;
+      }
+    }
+  }
+  .ref_article {
+    margin: 20rpx 0;
+    padding-left: 10rpx;
+    width: 100%;
+    border-left: 5rpx solid #bababa;
+    font-size: 24rpx;
+    color: #bababa;
+  }
+  .content {
+    width: 100%;
+    font-size: 32rpx;
+  }
+}
+.add_comment {
+  position: fixed;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 60rpx;
+  width: 96%;
+  background: #fff;
+  .add_header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20rpx;
+    height: 80rpx;
+    width: 100%;
+    .menu {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 36rpx;
+      color: #79c89e;
+    }
+    .btn_menu {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    image {
+      margin-right: 10rpx;
+      width: 60rpx;
+      height: 60rpx;
+    }
+    button {
+      margin-left: 20rpx;
+      width: 150rpx;
+      height: 60rpx;
+      border: 1rpx solid #79c89e;
+      border-radius: 10rpx;
+      color: #79c89e;
+      text-align: center;
+      font-size: 30rpx;
+      background: white;
+    }
+    button::after {
+      border: none;
+    }
+  }
+  textarea {
+    width: 100%;
+    border-bottom: 1rpx solid #79c89e;
+    font-size: 36rpx;
+  }
+}
+</style>
+
+<template lang="wxml">
+  <view class="container">
+    <view class="header" wx:if="{{articleId}}">这篇短文共有<text>{{ strSpace }}{{ commentsNum }}{{ strSpace }}</text>条读后感</view>
+    <view class="header" wx:if="{{!articleId}}">我一共发表了<text>{{ strSpace }}{{ commentsNum }}{{ strSpace }}</text>条读后感</view>
+    <!-- 我的读后感 -->
+    <view class="comment_items" wx:if="{{myComments.length !== 0}}" wx:for="{{myComments}}" wx:key="index">
+      <view class="avatar">
+        <image src="{{ item.user_avatarUrl }}"></image>
+      </view>
+      <view class="detail">
+        <view class="content_menu">
+          <view class="menu_left">
+            <view class="name">{{ item.user_name }}</view>
+            <view class="time">{{ item.updatedAt }}</view>
+          </view>
+          <view class="menu_right">
+            <image src="../../assets/modify.png" @tap="modifyMyComment({{item.objectId}}, {{index}})"></image>
+            <image src="../../assets/delete.png" @tap="deleteMyComment({{item.objectId}})"></image>
+          </view>
+        </view>
+        <view class="ref_article" wx:if="{{!articleId}}" @tap="commentArticle({{item.article_id}})">{{ item.ref_article }}</view>
+        <view class="content">{{ item.comment_content }}</view>
+      </view>
+    </view>
+    <!-- 所有读后感 -->
+    <view class="comment_items" wx:for="{{allCommentsShow}}" wx:key="index">
+      <view class="avatar">
+        <image src="{{ item.user_avatarUrl }}"></image>
+      </view>
+      <view class="detail">
+        <view class="content_menu">
+          <view class="menu_left">
+            <view class="name">{{ item.user_name }}</view>
+            <view class="time">{{ item.updatedAt }}</view>
+          </view>
+          <view class="menu_right">
+          </view>
+        </view>
+        <view class="content">{{ item.comment_content }}</view>
+      </view>
+    </view>
+    <view wx:if="{{isLoadAll}}" style="margin-top: 30rpx; color: #bababa;">没有更多了~</view>
+    <view class="add_comment" wx:if="{{(myComments.length === 0 && articleId && !isCancle) || (isModify && !isCancle)}}">
+      <view class="add_header">
+        <view class="menu" wx:if="{{myComments.length === 0}}">
+          <image src="../../assets/modify.png"></image>
+          发表读后感
+        </view>
+        <view class="menu" wx:if="{{myComments.length !== 0}}">
+          <image src="../../assets/modify.png"></image>
+          修改读后感
+        </view>
+        <view class="btn_menu">
+          <button @tap="cancel">取消</button>
+          <button @tap="submit">提交</button>
+        </view>
+      </view>
+      <textarea value="{{inputValue}}"
+                placeholder="写下你的读后感"
+                auto-focus="{{true}}"
+                auto-height="{{true}}"
+                fixed="{{true}}"
+                adjust-position="{{true}}"
+                bindinput="setInputValue"/>
+    </view>
+  </view>
+</template>
+
+<script>
+import wepy from 'wepy';
+
+export default class Comments extends wepy.page {
+  config = {
+    navigationBarTitleText: '读后感'
+  };
+  data = {
+    strSpace: ' ', // 空格字符变量，为了在小程序上显示空格
+    inputValue: '',
+    allComments: [],
+    allCommentsShow: [],
+    myComments: [],
+    isModify: false,
+    commentsNum: 0,
+    startPosition: 0,
+    endPosition: 19,
+    isLoadAll: false,
+    articleId: null,
+    articleTitle: '',
+    modifyId: '',
+    isCancle: false
+  };
+  methods = {
+    setInputValue(e) {
+      this.inputValue = e.detail.value;
+    },
+    submit() {
+      if (!this.inputValue) {
+        wx.showToast({
+          title: '无内容！',
+          icon: 'none'
+        });
+        return;
+      } else if (this.isModify) {
+        var commentObjId = this.modifyId;
+        const query = this.$parent.globalData.Bmob.Query('comments');
+        query
+          .get(commentObjId)
+          .then(res => {
+            console.log(res);
+            res.set('comment_content', this.inputValue);
+            res.save();
+            this.isModify = false;
+            this.onLoad({ id: this.articleId });
+            wx.showToast({
+              title: '修改成功'
+            });
+          })
+          .catch(err => {
+            console.log(err);
+          });
+      } else {
+        console.log(
+          this.articleTitle,
+          this.articleId,
+          this.userId,
+          wx.getStorageSync('userInfo').avatarUrl,
+          wx.getStorageSync('userInfo').nickName,
+          this.inputValue
+        );
+        const query = this.$parent.globalData.Bmob.Query('comments');
+        query.set('article_id', this.articleId);
+        query.set('ref_article', this.articleTitle);
+        query.set('usr_objectId', this.userId);
+        query.set('user_avatarUrl', wx.getStorageSync('userInfo').avatarUrl);
+        query.set('user_name', wx.getStorageSync('userInfo').nickName);
+        query.set('comment_content', this.inputValue);
+        query
+          .save()
+          .then(res => {
+            console.log(res);
+            this.onLoad({ id: this.articleId });
+          })
+          .catch(err => {
+            console.log(err);
+          });
+      }
+    },
+    cancel() {
+      this.isCancle = true;
+    },
+    modifyMyComment(id, index) {
+      this.inputValue = this.myComments[index].comment_content;
+      this.modifyId = id;
+      this.isModify = true;
+      this.isCancle = false;
+    },
+    deleteMyComment(id) {
+      var commentObjId = id;
+      const query = this.$parent.globalData.Bmob.Query('comments');
+      query
+        .destroy(commentObjId)
+        .then(res => {
+          console.log(res);
+          this.onLoad({ id: this.articleId });
+          wx.showToast({
+            title: '删除成功'
+          });
+        })
+        .catch(err => {
+          console.log(err);
+        });
+    },
+    // 读后感所在的文章
+    commentArticle(id) {
+      wx.navigateTo({
+        url: `./article?id=${id}` // 打开一个新的同路由页面，但指定不同的数据初始值
+      });
+    }
+  };
+  onLoad(options = {}) {
+    wx.showLoading({
+      title: '加载中'
+    });
+    console.log(options);
+
+    this.articleId = options.id;
+    this.articleTitle = options.articleTitle;
+    this.userId = wx.getStorageSync('usr_objectId');
+    this.startPosition = 0;
+    this.endPosition = 19;
+
+    const query = this.$parent.globalData.Bmob.Query('comments');
+    // 如果有id，则查询所有该短文的读后感，否则查询所有自己的读后感
+    if (this.articleId) {
+      // 两条查询语句一起写，就相当于AND查询
+      query.equalTo('article_id', '==', this.articleId);
+      query.find().then(res => {
+        console.log(res);
+        this.allComments = res;
+        this.commentsNum = res.length;
+        this.loadComments();
+        this.$apply();
+        wx.hideLoading();
+      });
+      // 查询这篇短文是否有我的读后感
+      query.equalTo('article_id', '==', this.articleId);
+      query.equalTo('usr_objectId', '==', this.userId);
+      query.find().then(res => {
+        console.log(res);
+        this.myComments = res;
+        this.$apply();
+      });
+    } else {
+      query.equalTo('usr_objectId', '==', this.userId);
+      query.find().then(res => {
+        console.log(res);
+        this.commentsNum = res.length;
+        this.myComments = res;
+        this.$apply();
+        wx.hideLoading();
+      });
+    }
+  }
+  onReachBottom() {
+    if (this.isLoadAll) return;
+    this.loadComments();
+  }
+  // 读后感列表
+  loadComments() {
+    // 如果大于二十条评论，分段显示
+    if (this.allComments.length > 20) {
+      this.allCommentsShow = this.allCommentsShow.concat(
+        this.allComments.slice(this.startPosition, this.endPosition)
+      );
+      this.startPosition += 20;
+      this.endPosition += 20;
+    } else {
+      this.allCommentsShow = this.allComments;
+      this.isLoadAll = true;
+    }
+    if (this.allCommentsShow.length === this.allComments.length)
+      this.isLoadAll = true;
+  }
+}
+</script>
