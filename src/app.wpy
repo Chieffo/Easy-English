@@ -144,7 +144,7 @@ export default class extends wepy.app {
       });
       wx.setStorage({
         key: 'word_list',
-        /* data: [{
+        data: [{
               "word": "equip",
               "ease": 0.5,
               "day": 0
@@ -294,8 +294,7 @@ export default class extends wepy.app {
               "ease": 0.5,
               "day": 0
             }
-          ], */
-        data: []
+          ],
       });
       wx.setStorage({
         key: 'day_num',
