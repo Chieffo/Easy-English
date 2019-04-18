@@ -209,7 +209,7 @@ export default class Index extends wepy.page {
   }
   onShow() {
     this.day_num = wx.getStorageSync('day_num')
-      ? wx.getStorageSync('day_task')
+      ? wx.getStorageSync('day_num')
       : 0;
     this.todayNewWords = wx.getStorageSync('day_task')
       ? wx.getStorageSync('day_task')

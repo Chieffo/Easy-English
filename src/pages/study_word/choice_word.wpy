@@ -73,7 +73,7 @@
         <view class="add" @tap="choice_word" id="all_word"><image src="../../assets/select_all.png"></image>添加整本</view>
       </view>
       <view wx:if="{{ isEmpty }}">已全部加入规划单词中</view>
-      <repeat wx:if="{{ !isEmpty }}" for="{{ bookWordList }}" key="index" index="index" item="item">
+      <repeat wx:if="{{ !isEmpty }}" for="{{ bookWordList }}" key="index" item="item">
         <addWord :item="item" @childAdd.user='choice_word'></addWord>
       </repeat>
       <view class="choice" wx:if="{{ isLoadAll }}">没有更多了~</view>
@@ -110,10 +110,7 @@ export default class ChoiceWord extends wepy.page {
           return obj.index === bookIndex;
         });
         this.wordBookName = allBookIndex[index_Position].name; // 通过Index查找设置单词书名字
-        wx.setStorage({
-          key: 'book_index',
-          data: bookIndex
-        });
+        wx.setStorageSync('book_index', bookIndex);
         this.loadWordList();
         this.isChoice = true;
         if (this.bookWordList.length <= 0) {
@@ -129,14 +126,18 @@ export default class ChoiceWord extends wepy.page {
         this.isChoice = false;
         this.isLoadAll = false;
         this.sort_wordList();
-        this.$apply();
       }
     },
     choice_word(e, evt) {
       var addWord = e.currentTarget.id;
       var wordList = wx.getStorageSync('word_list');
+      var bookIndex = wx.getStorageSync('book_index');
+      var storeWordList = wx.getStorageSync(bookIndex);
       if (addWord !== 'all_word') {
         // 把单词添加到我的规划单词中
+        wx.showLoading({
+          title: '正在添加'
+        });
         var word = {
           word: addWord,
           ease: 0.5,
@@ -144,35 +145,36 @@ export default class ChoiceWord extends wepy.page {
         };
         wordList.push(word);
         wx.setStorageSync('word_list', wordList);
-        // 删除单词书中已添加的单词
-        var position = this.bookWordList.indexOf(addWord);
-        this.bookWordList.splice(position, 1);
         // 更新本地储存
-        var bookIndex = wx.getStorageSync('book_index');
-        wx.setStorageSync(bookIndex, this.bookWordList);
+        var position = storeWordList.indexOf(addWord);
+        storeWordList.splice(position, 1);
+        wx.setStorageSync(bookIndex, storeWordList);
+        // 刷新显示列表
+        this.bookWordList = [];
+        this.startPosition = 0;
+        this.endPosition = 20;
+        this.loadWordList();
+        wx.hideLoading();
       } else {
-        wx.showToast({
-          title: '正在添加',
-          icon: 'loading',
-          duration: 100000
+        wx.showLoading({
+          title: '正在添加'
         });
         // 添加所有单词到规划单词
-        var bookIndex = wx.getStorageSync('book_index');
-        var storeWordList = wx.getStorageSync(bookIndex);
         var len = storeWordList.length;
         for (let i = 0; i < len; i++) {
           var word = {
-            word: storeWordList[i],
+            word: storeWordList[0], // 把列表的第一个单词添加到规划单词
             ease: 0.5,
             day: 0
           };
           wordList.push(word);
           wx.setStorageSync('word_list', wordList);
+          storeWordList.shift(); // 删除列表中已添加的单词，更新本地缓存
+          wx.setStorageSync(bookIndex, storeWordList);
         }
-        wx.hideToast();
+        wx.hideLoading();
         this.isEmpty = true;
         this.bookWordList = [];
-        wx.setStorageSync(bookIndex, this.bookWordList);
       }
     }
   };

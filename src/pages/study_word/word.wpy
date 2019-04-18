@@ -415,7 +415,6 @@ export default class Word extends wepy.page {
       });
     }
     // 数据初始化
-    this.book = wx.getStorageSync('book');
     this.today_word = wx.getStorageSync('today_word');
     this.task_detail = wx.getStorageSync('task_detail');
     this.today_new_num = wx.getStorageSync('today_new_num');

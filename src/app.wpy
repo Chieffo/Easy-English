@@ -142,176 +142,17 @@ export default class extends wepy.app {
         key: 'all_detail',
         data: []
       });
-      wx.setStorage({
-        key: 'word_list',
-        data: [{
-              "word": "equip",
-              "ease": 0.5,
-              "day": 0
-            },
-            {
-              "word": "frown",
-              "ease": 0.5,
-              "day": 0
-            },
-            {
-              "word": "fasten",
-              "ease": 0.5,
-              "day": 0
-            },
-            {
-              "word": "software",
-              "ease": 0.5,
-              "day": 0
-            },
-            {
-              "word": "stir",
-              "ease": 0.5,
-              "day": 0
-            },
-            {
-              "word": "distribution",
-              "ease": 0.5,
-              "day": 0
-            },
-            {
-              "word": "flexible",
-              "ease": 0.5,
-              "day": 0
-            },
-            {
-              "word": "solution",
-              "ease": 0.5,
-              "day": 0
-            },
-            {
-              "word": "lad",
-              "ease": 0.5,
-              "day": 0
-            },
-            {
-              "word": "panel",
-              "ease": 0.5,
-              "day": 0
-            },
-            {
-              "word": "ministry",
-              "ease": 0.5,
-              "day": 0
-            },
-            {
-              "word": "supreme",
-              "ease": 0.5,
-              "day": 0
-            },
-            {
-              "word": "supreme",
-              "ease": 0.5,
-              "day": 0
-            },
-            {
-              "word": "describe",
-              "ease": 0.5,
-              "day": 0
-            },
-            {
-              "word": "limb",
-              "ease": 0.5,
-              "day": 0
-            },
-            {
-              "word": "circumstance",
-              "ease": 0.5,
-              "day": 0
-            },
-            {
-              "word": "core",
-              "ease": 0.5,
-              "day": 0
-            },
-            {
-              "word": "assistant",
-              "ease": 0.5,
-              "day": 0
-            },
-            {
-              "word": "mess",
-              "ease": 0.5,
-              "day": 0
-            },
-            {
-              "word": "minus",
-              "ease": 0.5,
-              "day": 0
-            },
-            {
-              "word": "sector",
-              "ease": 0.5,
-              "day": 0
-            },
-            {
-              "word": "detection",
-              "ease": 0.5,
-              "day": 0
-            },
-            {
-              "word": "statue",
-              "ease": 0.5,
-              "day": 0
-            },
-            {
-              "word": "saucer",
-              "ease": 0.5,
-              "day": 0
-            },
-            {
-              "word": "skillful",
-              "ease": 0.5,
-              "day": 0
-            },
-            {
-              "word": "civilization",
-              "ease": 0.5,
-              "day": 0
-            },
-            {
-              "word": "overhead",
-              "ease": 0.5,
-              "day": 0
-            },
-            {
-              "word": "hobby",
-              "ease": 0.5,
-              "day": 0
-            },
-            {
-              "word": "statistic",
-              "ease": 0.5,
-              "day": 0
-            },
-            {
-              "word": "pregnant",
-              "ease": 0.5,
-              "day": 0
-            }
-          ],
-      });
+      wx.setStorageSync('word_list', []);
       wx.setStorage({
         key: 'day_num',
         data: 0
       });
-      wx.setStorage({
-        key: 'day_task',
-        data: 10
-      });
+      wx.setStorageSync('day_task', 10);
       wx.setStorage({
         key: 'remember_words',
         data: []
       });
-      wx.setStorage({
-        key: 'today_word',
-        data: []
-      });
+      wx.setStorageSync('today_word', []);
       wx.setStorage({
         key: 'my_articles',
         data: []
