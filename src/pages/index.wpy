@@ -167,7 +167,6 @@ export default class Index extends wepy.page {
     card: Card
   };
   data = {
-    time: '',
     day_num: [], // 打卡天数
     todayNewWords: 0,
     todayRememberWords: 0,
@@ -192,7 +191,6 @@ export default class Index extends wepy.page {
     }
   };
   onLoad() {
-    this.time = this.set_time(new Date());
     this.isLoadMore = true;
     this.loadList();
   }
@@ -214,8 +212,8 @@ export default class Index extends wepy.page {
     this.todayNewWords = wx.getStorageSync('day_task')
       ? wx.getStorageSync('day_task')
       : 0;
-    this.todayRememberWords = wx.getStorageSync(this.time)
-      ? wx.getStorageSync(this.time)
+    this.todayRememberWords = wx.getStorageSync(this.$parent.globalData.time)
+      ? wx.getStorageSync(this.$parent.globalData.time)
       : 0;
     this.myWord = wx.getStorageSync('word_list')
       ? wx.getStorageSync('word_list').length
@@ -223,16 +221,6 @@ export default class Index extends wepy.page {
     this.rememberWords = wx.getStorageSync('remember_words')
       ? wx.getStorageSync('remember_words').length
       : 0;
-  }
-  set_time(date) {
-    var month = date.getMonth() + 1;
-    var day = date.getDate();
-    var year = date.getFullYear();
-    const formatNumber = n => {
-      n = n.toString();
-      return n[1] ? n : '0' + n;
-    };
-    return [year, month, day].map(formatNumber).join('/');
   }
   // 我的词库
   goMyWord() {

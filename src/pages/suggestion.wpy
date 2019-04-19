@@ -139,7 +139,7 @@
     <view class="add_comment" wx:if="{{isAdd}}">
       <view class="add_header">
         <view>
-          <image src="../../assets/modify.png"></image>
+          <image src="../assets/modify.png"></image>
           反馈建议
         </view>
         <button @tap="submit">提交</button>
