@@ -156,25 +156,38 @@ export default class ChoiceWord extends wepy.page {
         this.loadWordList();
         wx.hideLoading();
       } else {
-        wx.showLoading({
-          title: '正在添加'
+        var that = this;
+        wx.showModal({
+          title: '注意',
+          content:
+            '添加整本数据可能过大导致卡死，建议手动选择。如需继续请按确定。',
+          success(res) {
+            if (res.confirm) {
+              console.log('用户点击确定');
+              wx.showLoading({
+                title: '正在添加'
+              });
+              // 添加所有单词到规划单词
+              var len = storeWordList.length;
+              for (let i = 0; i < len; i++) {
+                var word = {
+                  word: storeWordList[0], // 把列表的第一个单词添加到规划单词
+                  ease: 0.5,
+                  day: 0
+                };
+                wordList.push(word);
+                wx.setStorageSync('word_list', wordList);
+                storeWordList.shift(); // 删除列表中已添加的单词，更新本地缓存
+                wx.setStorageSync(bookIndex, storeWordList);
+              }
+              wx.hideLoading();
+              that.isEmpty = true;
+              that.bookWordList = [];
+            } else if (res.cancel) {
+              console.log('用户点击取消');
+            }
+          }
         });
-        // 添加所有单词到规划单词
-        var len = storeWordList.length;
-        for (let i = 0; i < len; i++) {
-          var word = {
-            word: storeWordList[0], // 把列表的第一个单词添加到规划单词
-            ease: 0.5,
-            day: 0
-          };
-          wordList.push(word);
-          wx.setStorageSync('word_list', wordList);
-          storeWordList.shift(); // 删除列表中已添加的单词，更新本地缓存
-          wx.setStorageSync(bookIndex, storeWordList);
-        }
-        wx.hideLoading();
-        this.isEmpty = true;
-        this.bookWordList = [];
       }
     }
   };

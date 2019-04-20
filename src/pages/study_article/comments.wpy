@@ -287,20 +287,32 @@ export default class Comments extends wepy.page {
       this.isCancle = false;
     },
     deleteMyComment(id) {
-      var commentObjId = id;
-      const query = this.$parent.globalData.Bmob.Query('comments');
-      query
-        .destroy(commentObjId)
-        .then(res => {
-          console.log(res);
-          this.onLoad({ id: this.articleId });
-          wx.showToast({
-            title: '删除成功'
-          });
-        })
-        .catch(err => {
-          console.log(err);
-        });
+      var that = this
+      wx.showModal({
+        title: '注意',
+        content: '确定删除这条读后感？',
+        success(res) {
+          if (res.confirm) {
+            console.log('用户点击确定');
+            var commentObjId = id;
+            const query = that.$parent.globalData.Bmob.Query('comments');
+            query
+              .destroy(commentObjId)
+              .then(res => {
+                console.log(res);
+                that.onLoad({ id: that.articleId });
+                wx.showToast({
+                  title: '删除成功'
+                });
+              })
+              .catch(err => {
+                console.log(err);
+              });
+          } else if (res.cancel) {
+            console.log('用户点击取消');
+          }
+        }
+      });
     },
     // 读后感所在的文章
     commentArticle(id) {

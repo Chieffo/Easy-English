@@ -16,8 +16,12 @@
   display: flex;
   flex-direction: column;
   margin-top: 30rpx;
-  >text {
-    font-size: 36rpx;
+  > text {
+    margin: 20rpx 0;
+    padding-left: 10rpx;
+    border-left: 4rpx solid #bababa;
+    width: 94%;
+    font-size: 24rpx;
   }
 }
 </style>
@@ -28,7 +32,12 @@
       <image src="../assets/profile.png"></image>
       <text class="middle_font">轻英语</text>
     </view>
-    <view class="intro">轻英语是一款集合了背单词与英文阅读的小程序。用户可以背单词打卡，背单词的主要功能是可以根据用户对单词的记忆曲线科学安排记单词。<text class="small_font">每个单词的初始权值为0.5，当用户选择记住、模糊、忘记三个选项，系统会进行相应的权值增加或减少，权值越大，代表用户对这个单词的记忆越熟悉。当权值大于1的时候，就表示用户记住了这个单词。</text>另外的一个主要功能是阅读英文短文，用户可以充分学习利用到所学的单词，并且在阅读短文的过程中遇到不懂的单词可以添加到规划单词中进行学习。</view>
+    <view class="intro">轻英语是一款集合了背单词与英文阅读的小程序。用户可以背单词打卡，背单词的主要功能是可以根据用户对单词的记忆曲线科学安排记单词。
+
+      <text class="small_font">每个单词的初始权值为0.5，当用户选择记住、模糊、忘记三个选项，系统会进行相应的权值增加或减少，权值越大，代表用户对这个单词的记忆越熟悉。当权值大于1的时候，就表示用户记住了这个单词。</text>
+      
+      另外的一个主要功能是阅读英文短文，用户可以充分学习利用到所学的单词，并且在阅读短文的过程中遇到不懂的单词可以添加到规划单词中进行学习。
+    </view>
   </view>
 </template>
 
