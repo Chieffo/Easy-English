@@ -190,6 +190,13 @@ export default class Index extends wepy.page {
       });
     }
   };
+  //页面分享函数
+  onShareAppMessage() {
+    return {
+      title: '快来轻英语和我一起轻松学英语！',
+      path: '/pages/login'
+    };
+  }
   onLoad() {
     this.isLoadMore = true;
     this.loadList();
