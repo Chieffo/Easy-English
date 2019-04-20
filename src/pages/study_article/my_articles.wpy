@@ -80,7 +80,7 @@ export default class MyArticles extends wepy.page {
         }
         wx.request({
           url: `https://www.shanbay.com/api/v2/news/articles/${
-            this.myArticleIds[idPosition]
+            this.myArticleIds[this.idPosition]
           }/`,
           success: res => {
             if (res.data.msg === 'SUCCESS') {
