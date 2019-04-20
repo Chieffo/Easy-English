@@ -541,9 +541,6 @@ export default class Word extends wepy.page {
   // 通过扇贝提供的api搜索该单词
   search(word) {
     this.content = word;
-    this.pron = {};
-    this.pron_audio = {};
-    this.definition = [];
     var that = this;
     wx.request({
       url: 'https://api.shanbay.com/bdc/search/?word=' + word,
@@ -560,6 +557,15 @@ export default class Word extends wepy.page {
         var id = res.data.data.conent_id;
         that.liju(id);
         that.$apply();
+        // 拿到单词数据后发音
+        const innerAudioContext = wx.createInnerAudioContext();
+        innerAudioContext.autoplay = true;
+        innerAudioContext.src = res.data.data.audio_addresses.us[0];
+        innerAudioContext.onPlay(() => {});
+        innerAudioContext.onError(res => {
+          console.log(res.errMsg);
+          console.log(res.errCode);
+        });
       },
       fail: function() {},
       complete: function() {}
