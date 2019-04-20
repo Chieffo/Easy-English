@@ -52,15 +52,18 @@
   }
 }
 .btn {
-  width: 60%;
-  border-radius: 5px;
-  margin: 20px auto;
-  padding-top: 2px;
-  font-size: 14px;
-  background-color: rgb(121, 200, 158);
-  color: white;
-  overflow: hidden;
-  height: 40px;
+  width: 100%;
+  button {
+    width: 60%;
+    border-radius: 5px;
+    margin: 20px auto;
+    padding-top: 2px;
+    font-size: 14px;
+    background-color: rgb(121, 200, 158);
+    color: white;
+    overflow: hidden;
+    height: 40px;
+  }
 }
 </style>
 
@@ -82,9 +85,11 @@
         </view>
       </block>
     </view>
-    <!-- 加wx:if是为了让加载完后才显示button，不然文章还没加载完整个页面就一个孤零零的button太丑了 -->
-    <button class="btn" wx:if="{{ !!detail.title_en && (isRead === -1) }}" @tap="finish">完成阅读</button>
-    <button class="btn" wx:if="{{ !!detail.title_en && (isRead !== -1) }}" @tap="viewComments">查看读后感</button>
+    <view class="btn" wx:if="{{!isFromShare}}">
+      <!-- 加wx:if是为了让加载完后才显示button，不然文章还没加载完整个页面就一个孤零零的button太丑了 -->
+      <button wx:if="{{ !!detail.title_en && (isRead === -1) }}" @tap="finish">完成阅读</button>
+      <button wx:if="{{ !!detail.title_en && (isRead !== -1) }}" @tap="viewComments">查看读后感</button>
+    </view>
   </view>
 </template>
 
@@ -115,7 +120,8 @@ export default class Article extends wepy.page {
       }
     ],
     isFinished: false, // 是否完成阅读
-    isRead: -1 // 是否在我的短文中
+    isRead: -1, // 是否在我的短文中
+    isFromShare: false, // 是否是从小程序分享卡片进来的
   };
   methods = {
     handleTap(e) {
@@ -255,7 +261,7 @@ export default class Article extends wepy.page {
     let title = this.detail.title_cn;
     return {
       title: `轻英语 - ${title}`,
-      path: `../study_article/article?id=${id}`
+      path: `/pages/study_article/article?id=${id}&isFromShare=${true}`
     };
   }
   onLoad(options = {}) {
@@ -263,6 +269,7 @@ export default class Article extends wepy.page {
       title: '加载中'
     });
     options.id = options.id || 'oivfz';
+    this.isFromShare = options.isFromShare ? true : false; // 如果是分享页面进来的，不显示完成阅读
     wx.request({
       url: `https://www.shanbay.com/api/v2/news/articles/${options.id}/`,
       success: res => {

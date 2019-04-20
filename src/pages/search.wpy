@@ -220,7 +220,18 @@ export default class Search extends wepy.page {
       });
     }
   };
-  onLoad() {}
+  onShareAppMessage() {
+    var word = this.inputContent;
+    return {
+      title: `轻英语 - 你知道${word}的意思吗？`,
+      path: `/pages/search?word=${word}`
+    };
+  }
+  onLoad(options = {}) {
+    if (options.word) {
+      this.inputContent = options.word;
+    }
+  }
   onShow() {
     this.isFocus = true;
   }
