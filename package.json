@@ -19,6 +19,7 @@
   "dependencies": {
     "http": "0.0.0",
     "hydrogen-js-sdk": "^1.7.0",
+    "jshint": "^2.10.2",
     "redux": "^3.7.2",
     "redux-actions": "^2.2.1",
     "redux-promise": "^0.5.3",

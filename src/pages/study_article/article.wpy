@@ -274,7 +274,7 @@ export default class Article extends wepy.page {
       url: `https://www.shanbay.com/api/v2/news/articles/${options.id}/`,
       success: res => {
         if (res.data.msg === 'SUCCESS') {
-          Object.assign(this.detail, res.data.data);
+          this.detail = res.data.data;
           // 设定完成阅读的最少时间
           setTimeout(() => {
             this.isFinished = true;
@@ -285,7 +285,7 @@ export default class Article extends wepy.page {
             }/annotation/`,
             success: res => {
               if (res.data.msg === 'SUCCESS') {
-                Object.assign(this.annotation, res.data.data);
+                this.annotation = res.data.data;
               }
             }
           });

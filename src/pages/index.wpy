@@ -76,15 +76,15 @@
     opacity: 0.8;
     &:before {
       position: absolute;
-      content: '————';
-      left: 450rpx;
+      content: '———';
+      left: 350rpx;
       right: 0;
     }
     &:after {
       position: absolute;
-      content: '————';
+      content: '———';
       left: 0;
-      right: 450rpx;
+      right: 350rpx;
     }
   }
 }
