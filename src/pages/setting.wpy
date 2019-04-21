@@ -116,9 +116,13 @@ export default class Setting extends wepy.page {
     this.taskNumSeries = new Array(191)
       .fill('')
       .map((item, index) => index + 10);
-    this.taskNumPosition = this.taskNumSeries.indexOf(
-      wx.getStorageSync('day_task')
-    );
+    var updated_day_task = wx.getStorageSync('updated_day_task');
+    var task_num = wx.getStorageSync('day_task');
+    // 检查是否有更新任务数
+    if (updated_day_task && updated_day_task !== task_num) {
+      task_num = updated_day_task;
+    }
+    this.taskNumPosition = this.taskNumSeries.indexOf(task_num);
   }
   //页面分享函数
   onShareAppMessage() {
