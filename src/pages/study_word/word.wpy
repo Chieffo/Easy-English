@@ -463,26 +463,26 @@ export default class Word extends wepy.page {
     }
   }
   // 当页面重新展示时调用函数
-  onShow() {
-    this.today_word = wx.getStorageSync('today_word');
-    this.task_detail = wx.getStorageSync('task_detail');
-    if (this.today_word.length < this.task_num) {
-      this.goto_choice = true;
-    } else {
-      this.goto_choice = false;
-      // 加载第一个单词
-      var today_task = wx.getStorageSync('task');
-      var length = today_task.length;
-      if (length > 0) {
-        var n = today_task[0];
-        this.isShow = false;
-        this.counter = n;
-        this.search(this.today_word[n].word);
-      } else {
-        this.complete();
-      }
-    }
-  }
+  // onShow() {
+  //   this.today_word = wx.getStorageSync('today_word');
+  //   this.task_detail = wx.getStorageSync('task_detail');
+  //   if (this.today_word.length < this.task_num) {
+  //     this.goto_choice = true;
+  //   } else {
+  //     this.goto_choice = false;
+  //     // 加载第一个单词
+  //     var today_task = wx.getStorageSync('task');
+  //     var length = today_task.length;
+  //     if (length > 0) {
+  //       var n = today_task[0];
+  //       this.isShow = false;
+  //       this.counter = n;
+  //       this.search(this.today_word[n].word);
+  //     } else {
+  //       this.complete();
+  //     }
+  //   }
+  // }
   // 当页面被隐藏时，保存数据
   onHide() {
     wx.setStorageSync('task_detail', this.task_detail);

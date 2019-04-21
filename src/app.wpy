@@ -228,7 +228,13 @@ export default class extends wepy.app {
     // 安排当天的学习任务
     var last_list = wx.getStorageSync('word_list'); // 待学习的单词列表
     var len = last_list.length;
+    var updated_day_task = wx.getStorageSync('updated_day_task');
     var task_num = wx.getStorageSync('day_task');
+    // 检查是否有更新任务数
+    if (updated_day_task && updated_day_task !== task_num) {
+      task_num = updated_day_task;
+      wx.setStorageSync('day_task', updated_day_task);
+    }
     var today_list = [];
     var word_num = 0;
     // 把待学习的单词加入到今日单词列表

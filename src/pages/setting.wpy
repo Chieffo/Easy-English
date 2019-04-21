@@ -129,12 +129,24 @@ export default class Setting extends wepy.page {
     };
   }
   setDayTask(e) {
-    this.taskNumPosition = e.detail.value;
-    wx.setStorage({
-      key: 'day_task',
-      data: this.taskNumSeries[e.detail.value]
+    var that = this;
+    wx.showModal({
+      title: '确定修改',
+      content: '修改每日学习量会在第二日生效',
+      success(res) {
+        if (res.confirm) {
+          console.log('用户点击确定');
+          that.taskNumPosition = e.detail.value;
+          wx.setStorage({
+            key: 'updated_day_task',
+            data: that.taskNumSeries[e.detail.value]
+          });
+          that.$apply();
+        } else if (res.cancel) {
+          console.log('用户点击取消');
+        }
+      }
     });
-    this.$parent.arrangeWords();
   }
 }
 </script>
