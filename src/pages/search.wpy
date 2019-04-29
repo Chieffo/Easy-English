@@ -114,7 +114,7 @@
           <view>{{ content }}</view>
           <view class="pron">/{{ pron.us }}/</view>
         </view>
-        <image src="../../assets/sound.png"></image>
+        <image src="../assets/sound.png"></image>
       </view>
       <view class="word_definition">
         <view wx:for="{{ definition }}" wx:key="{{ index }}">{{ item }}</view>
