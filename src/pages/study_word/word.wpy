@@ -387,7 +387,7 @@ export default class Word extends wepy.page {
     },
     // 添加规划单词
     choiceWords() {
-      this.$navigate({
+      wx.redirectTo({
         url: './choice_word'
       });
     },
@@ -429,6 +429,7 @@ export default class Word extends wepy.page {
     if (this.today_word.length < this.task_num) {
       this.goto_choice = true;
     } else {
+      this.goto_choice = false;
       var today_task = wx.getStorageSync('task');
       if (today_task.length > 0) {
         var task_num = today_task[0];
