@@ -27,7 +27,7 @@
     "wepy-async-function": "^1.4.7",
     "wepy-com-toast": "^1.0.2",
     "wepy-redux": "^1.5.3",
-    "xmldom": "^0.1.27"
+    "xmldom": "^0.5.0"
   },
   "devDependencies": {
     "babel-eslint": "^7.2.1",
